@@ -1,4 +1,4 @@
-import WelcomePage from "./WelcomePage"
+import WelcomePage from "./pages/WelcomePage"
 
 function App() {
   const handleNameSubmit = (name) => {
