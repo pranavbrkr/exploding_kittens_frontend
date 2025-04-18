@@ -1,14 +1,23 @@
 import { Box, Button, Paper, TextField, Typography } from "@mui/material";
-import { useState } from "react"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-function WelcomePage({ onSubmitName }) {
-  const [name, setName] = useState('')
+function Welcome() {
+  const [name, setName] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = () => {
-    if(name.trim() !== '') {
-      onSubmitName(name.trim());
+  const handleSubmit = async () => {
+    if (name.trim() === '') return;
+
+    try {
+      const res = await axios.post("http://localhost:8080/player/register", { name });
+      const player = res.data;
+      navigate("/waiting", { state: { player } });
+    } catch (err) {
+      console.error("Player registration failed", err);
     }
-  }
+  };
 
   return (
     <Box
@@ -50,6 +59,7 @@ function WelcomePage({ onSubmitName }) {
         </Button>        
       </Paper>      
     </Box>
-  )
+  );
 }
-export default WelcomePage
+
+export default Welcome;
