@@ -2,9 +2,11 @@ import { Box, Button, Paper, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import useGameStore from "../store/useGameStore";
 
 function Welcome() {
   const [name, setName] = useState('');
+  const setPlayer = useGameStore((state) => state.setPlayer);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
@@ -13,7 +15,8 @@ function Welcome() {
     try {
       const res = await axios.post("http://localhost:8080/player/register", { name });
       const player = res.data;
-      navigate("/waiting", { state: { player } });
+      setPlayer(player.playerId, player.name)
+      navigate("/waiting");
     } catch (err) {
       console.error("Player registration failed", err);
     }

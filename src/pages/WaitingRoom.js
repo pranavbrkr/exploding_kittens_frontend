@@ -1,13 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Typography, Button, Paper } from "@mui/material";
+import useGameStore from "../store/useGameStore";
 
 function WaitingRoom() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  const player = state?.player;
 
-  if (!player) {
+  const playerName = useGameStore((state) => state.playerName);
+  const playerId = useGameStore((state) => state.playerId);
+
+  if (!playerId) {
     navigate("/");
     return null;
   }
@@ -27,10 +30,10 @@ function WaitingRoom() {
           Waiting Room
         </Typography>
         <Typography variant="subtitle1">
-          <strong>Player Name:</strong> {player.name}
+          <strong>Player Name:</strong> {playerName}
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
-          <strong>Player ID:</strong> {player.playerId}
+          <strong>Player ID:</strong> {playerId}
         </Typography>
 
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
