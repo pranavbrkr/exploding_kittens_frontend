@@ -1,49 +1,82 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Typography, Button, Paper } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { Box, Typography, Button, Paper, TextField } from "@mui/material";
+import { useState } from "react";
+import axios from "axios";
 import useGameStore from "../store/useGameStore";
 
 function WaitingRoom() {
-  const { state } = useLocation();
   const navigate = useNavigate();
-
-
   const playerName = useGameStore((state) => state.playerName);
   const playerId = useGameStore((state) => state.playerId);
+  const setLobbyId = useGameStore((state) => state.setLobbyId);
+
+  const [showJoinInput, setShowJoinInput] = useState(false);
+  const [joinLobbyId, setJoinLobbyId] = useState('');
 
   if (!playerId) {
     navigate("/");
     return null;
   }
 
+  const handleCreateLobby = async () => {
+    try {
+      const res = await axios.post("http://localhost:8081/lobby/create", { playerId });
+      const { lobbyId } = res.data;
+      setLobbyId(lobbyId);
+      navigate("/lobby");
+    } catch (err) {
+      console.error("Failed to create lobby", err);
+    }
+  };
+
+  const handleJoinLobby = async () => {
+    if (!joinLobbyId.trim()) return;
+    try {
+      const res = await axios.post("http://localhost:8081/lobby/join", {
+        playerId,
+        lobbyId: joinLobbyId.trim(),
+      });
+      const { lobbyId } = res.data;
+      setLobbyId(lobbyId);
+      navigate("/lobby");
+    } catch (err) {
+      console.error("Failed to join lobby", err);
+    }
+  };
+
   return (
-    <Box
-      sx={{
-        height: '100vh',
-        backgroundColor: '#f9f9f9',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <Box sx={{ height: '100vh', backgroundColor: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <Paper sx={{ p: 4, borderRadius: 3, minWidth: 400, textAlign: 'center' }}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
           Waiting Room
         </Typography>
-        <Typography variant="subtitle1">
-          <strong>Player Name:</strong> {playerName}
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          <strong>Player ID:</strong> {playerId}
-        </Typography>
+        <Typography variant="subtitle1"><strong>Player Name:</strong> {playerName}</Typography>
+        <Typography variant="subtitle1" gutterBottom><strong>Player ID:</strong> {playerId}</Typography>
 
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'space-between' }}>
-          <Button variant="outlined" fullWidth sx={{ mr: 1 }}>
+          <Button variant="outlined" fullWidth sx={{ mr: 1 }} onClick={handleCreateLobby}>
             Create Lobby
           </Button>
-          <Button variant="outlined" fullWidth sx={{ ml: 1 }}>
+          <Button variant="outlined" fullWidth sx={{ ml: 1 }} onClick={() => setShowJoinInput(true)}>
             Join Lobby
           </Button>
         </Box>
+
+        {showJoinInput && (
+          <Box sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Enter Lobby ID"
+              value={joinLobbyId}
+              onChange={(e) => setJoinLobbyId(e.target.value)}
+              sx={{ mb: 2 }}
+            />
+            <Button variant="contained" fullWidth onClick={handleJoinLobby}>
+              Submit
+            </Button>
+          </Box>
+        )}
       </Paper>
     </Box>
   );
