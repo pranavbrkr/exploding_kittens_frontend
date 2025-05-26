@@ -12,6 +12,7 @@ function WaitingRoom() {
 
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [joinLobbyId, setJoinLobbyId] = useState('');
+  const [error, setError] = useState('');
 
   if (!playerId) {
     navigate("/");
@@ -41,6 +42,13 @@ function WaitingRoom() {
       navigate("/lobby");
     } catch (err) {
       console.error("Failed to join lobby", err);
+      if (err.response?.status === 400) {
+        setError("Lobby is full. Please try another.");
+      } else if (err.response?.status === 500) {
+        setError("Lobby not found.");
+      } else {
+        setError("Failed to join lobby. Please try again.");
+      }
     }
   };
 
@@ -61,6 +69,12 @@ function WaitingRoom() {
             Join Lobby
           </Button>
         </Box>
+
+        {error && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
 
         {showJoinInput && (
           <Box sx={{ mt: 2 }}>
