@@ -1,19 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Box, Typography, Paper, Button, Divider } from "@mui/material";
 import axios from "axios";
 import useGameStore from "../store/useGameStore";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { connectToLobbySocket, disconnectLobbySocket } from "../ws/LobbySocket";
 
 function Lobby() {
   const  { lobbyId } = useParams()
-  const { playerName, playerId } = useGameStore();
-  const [participants, setParticipants] = useState(null);
+  const { playerName, playerId, participants } = useGameStore();
+  const setParticipants = useGameStore((state) => state.setParticipants);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLobby = async () => {
       try {
         const res = await axios.get(`http://localhost:8081/lobby/${lobbyId}`);
-        setParticipants(res.data.players);
+        const players = res.data.players;
+        setParticipants(players);
       } catch (err) {
         console.error("Failed to fetch lobby info", err);
       }
@@ -24,6 +27,25 @@ function Lobby() {
 
     return () => clearInterval(interval);
   }, [lobbyId]);
+
+  useEffect(() => {
+    connectToLobbySocket(lobbyId, () => {
+      disconnectLobbySocket();
+      navigate(`/game/${lobbyId}`);
+    });
+
+    return () => {
+      disconnectLobbySocket();
+    };
+  }, [lobbyId]);
+
+  const handleStartGame = async () => {
+    try {
+      await axios.post(`http://localhost:8081/lobby/start/${lobbyId}`);
+    } catch (err) {
+      console.error("Failed to start game", err);
+    }
+  };
 
   if (!participants) return <div>Loading lobby...</div>;
 
@@ -45,7 +67,7 @@ function Lobby() {
             <li key={p.playerId}>{p.name}</li>
           ))}
         </ul>
-        <Button variant="contained" fullWidth sx={{ mt: 3 }} disabled={participants.length !== 4}>
+        <Button variant="contained" fullWidth sx={{ mt: 3 }} disabled={participants.length !== 4} onClick={handleStartGame}>
           Start Game
         </Button>
       </Paper>

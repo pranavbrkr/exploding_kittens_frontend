@@ -4,12 +4,12 @@ const useGameStore = create((set) => ({
   playerId: null,
   playerName: '',
   lobbyId: null,
-  opponentIds: [],
+  participants: [],
 
   setPlayer: (id, name) => set({ playerId: id, playerName: name }),
   setLobby: (lobbyId) => set({ lobbyId }),
-  setOpponents: (ids) => set({ opponentIds: ids }),
-  resetGame: () => set({ playerId: null, playerName: '', lobbyId: null, opponentIds: [] }),
+  setParticipants: (ids) => set({ participants: ids }),
+  resetGame: () => set({ playerId: null, playerName: '', lobbyId: null, participants: [] }),
   setLobbyId: (id) => set({ lobbyId: id }),
 }));
 
