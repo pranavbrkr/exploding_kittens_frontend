@@ -43,8 +43,8 @@ function Lobby() {
             <li key={p.playerId}>{p.name}</li>
           ))}
         </ul>
-        <Button variant="contained" fullWidth sx={{ mt: 3 }} disabled>
-          Start Game (Coming Soon)
+        <Button variant="contained" fullWidth sx={{ mt: 3 }} disabled={participants.length !== 4}>
+          Start Game
         </Button>
       </Paper>
     </Box>
