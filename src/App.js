@@ -9,7 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Welcome />} />
         <Route path="/waiting" element={<WaitingRoom />} />
-        <Route path="/lobby" element={<Lobby />} />
+        <Route path="/lobby/:lobbyId" element={<Lobby />} />
       </Routes>
     </Router>
   );

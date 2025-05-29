@@ -24,7 +24,7 @@ function WaitingRoom() {
       const res = await axios.post("http://localhost:8081/lobby/create", { playerId });
       const { lobbyId } = res.data;
       setLobbyId(lobbyId);
-      navigate("/lobby");
+      navigate(`/lobby/${lobbyId}`);
     } catch (err) {
       console.error("Failed to create lobby", err);
     }
@@ -39,7 +39,7 @@ function WaitingRoom() {
       });
       const { lobbyId } = res.data;
       setLobbyId(lobbyId);
-      navigate("/lobby");
+      navigate(`/lobby/${lobbyId}`);
     } catch (err) {
       console.error("Failed to join lobby", err);
       if (err.response?.status === 400) {

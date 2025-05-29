@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Box, Typography, Paper, Button, Divider } from "@mui/material";
 import axios from "axios";
 import useGameStore from "../store/useGameStore";
+import { useParams } from "react-router-dom";
 
 function Lobby() {
-  const { playerName, playerId, lobbyId } = useGameStore();
+  const  { lobbyId } = useParams()
+  const { playerName, playerId } = useGameStore();
   const [participants, setParticipants] = useState(null);
 
   useEffect(() => {
