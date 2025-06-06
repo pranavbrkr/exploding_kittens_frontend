@@ -10,6 +10,8 @@ function Game() {
   const { playerId, playerName, participants } = useGameStore();
   const [hand, setHand] = useState([]);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
+  const [cardsToDraw, setCardsToDraw] = useState(0);
+  const [usedCards, setUsedCards] = useState([]);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -24,6 +26,8 @@ function Game() {
 
         const current = gameState.players[gameState.currentPlayerIndex]?.playerId;
         if (current) setCurrentPlayerId(current);
+        setCardsToDraw(gameState.cardsToDraw || 0);
+        setUsedCards(gameState.usedCards || []);
 
         const player = gameState.players.find(p => p.playerId === playerId);
         if (player) setHand(player.hand);
@@ -72,9 +76,37 @@ function Game() {
         </Typography>
         <ul style={{ textAlign: "left" }}>
           {hand.map((card, idx) => (
-            <li key={idx}>{card}</li>
+            <li
+              key={idx}
+              onClick={async () => {
+                if (playerId !== currentPlayerId) return;
+                try {
+                  await axios.post(`http://localhost:8082/game/play/${lobbyId}`, null, {
+                    params: {
+                      playerId,
+                      cardType: card
+                    }
+                  });
+                  // Optimistically remove the card from hand (optional)
+                  setHand((prev) => prev.filter((_, i) => i !== idx));
+                } catch (err) {
+                  console.error("Failed to play card", err);
+                }
+              }}
+              style={{
+                cursor: playerId === currentPlayerId ? "pointer" : "not-allowed",
+                opacity: playerId === currentPlayerId ? 1 : 0.6,
+                marginBottom: 4
+              }}
+            >
+              {card}
+            </li>
           ))}
         </ul>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="subtitle1" gutterBottom>
+          Cards Left to Draw: {cardsToDraw}
+        </Typography>
         <Divider sx={{ my: 2 }} />
         <Button
           variant="contained"
