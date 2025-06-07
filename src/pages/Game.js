@@ -77,7 +77,23 @@ function Game() {
 
       {/* Right - Deck */}
       <Box sx={{ position: 'absolute', top: 32, right: 32 }}>
-        <img src="/assets/cards/BACK.png" alt="deck" width={80} style={{ borderRadius: 12 }} />
+        <img
+          src="/assets/cards/BACK.png"
+          alt="deck"
+          width={80}
+          style={{ borderRadius: 12 }}
+          onClick={async () => {
+            if (playerId !== currentPlayerId) return;
+            try {
+              await axios.post(`http://localhost:8082/game/draw/${lobbyId}`, null, {
+                params: {playerId},
+              });
+              await refreshGameState();
+            } catch (err) {
+              console.error("Failed to draw card", err);
+            }
+          }}
+        />
       </Box>
 
       {/* Bottom - Player Hand */}
