@@ -12,6 +12,8 @@ function Game() {
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
   const [usedCards, setUsedCards] = useState([]);
   const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
+  const [futureCards, setFutureCards] = useState([]);
+  const [showFutureModal, setShowFutureModal] = useState(false);
 
   const refreshGameState = async () => {
     try {
@@ -36,14 +38,14 @@ function Game() {
   }, [lobbyId, playerId]);
 
   useEffect(() => {
-    connectToGameSocket(lobbyId, setCurrentPlayerId, refreshGameState);
+    connectToGameSocket(lobbyId, setCurrentPlayerId, refreshGameState, (cards) => {
+      setFutureCards(cards);
+      setShowFutureModal(true);
+    });
     return () => disconnectGameSocket();
   }, [lobbyId]);
 
-  console.log("All used cards:", usedCards);
   const latestUsedCard = usedCards[usedCards.length - 1];
-
-  console.log("Last used card:", latestUsedCard);
 
   return (
     <Box sx={{ height: '100vh', backgroundColor: '#3a3ad6', p: 4, position: 'relative' }}>
@@ -165,6 +167,53 @@ function Game() {
           Skip Turn
         </button>
       </Box>
+      {showFutureModal && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '25%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#fff',
+            padding: 6,
+            borderRadius: 6,
+            boxShadow: '0 0 30px rgba(0,0,0,0.6)',
+            zIndex: 1000,
+            display: 'flex',
+            gap: 4,
+            alignItems: 'center',
+            minWidth: 600
+          }}
+        >
+          {futureCards.map((card, index) => (
+            <img
+              key={index}
+              src={`/assets/cards/${card}.jpg`}
+              alt={card}
+              width={200}
+              style={{
+                borderRadius: 12,
+                boxShadow: '0 0 15px rgba(0,0,0,0.3)'
+              }}
+            />
+          ))}
+          <button
+            onClick={() => setShowFutureModal(false)}
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              background: 'transparent',
+              border: 'none',
+              fontSize: 32,
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            ×
+          </button>
+        </Box>
+      )}
     </Box>
   );
 }
