@@ -11,6 +11,7 @@ function Game() {
   const [hand, setHand] = useState([]);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
   const [usedCards, setUsedCards] = useState([]);
+  const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
 
   const refreshGameState = async () => {
     try {
@@ -19,6 +20,7 @@ function Game() {
 
       const current = gameState.players[gameState.currentPlayerIndex]?.playerId;
       if (current) setCurrentPlayerId(current);
+      setEliminatedPlayers(gameState.eliminatedPlayers || []);
 
       setUsedCards(gameState.usedCards || []);
 
@@ -54,7 +56,9 @@ function Game() {
               sx={{ 
                 width: 60, 
                 height: 60, 
-                bgcolor: p.playerId === currentPlayerId ? 'yellow' : 'transparent', 
+                bgcolor: eliminatedPlayers.includes(p.playerId)
+                  ? 'red'
+                  : p.playerId === currentPlayerId ? 'yellow' : 'transparent', 
                 border: '5px solid black' 
               }}
             />
