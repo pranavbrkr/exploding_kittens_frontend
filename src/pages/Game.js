@@ -4,6 +4,7 @@ import { Box, Typography, Avatar, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { connectToGameSocket, disconnectGameSocket } from "../ws/GameSocket";
+import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 
 function Game() {
   const { lobbyId } = useParams();
@@ -14,6 +15,8 @@ function Game() {
   const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
   const [futureCards, setFutureCards] = useState([]);
   const [showFutureModal, setShowFutureModal] = useState(false);
+  const [alterCards, setAlterCards] = useState([])
+  const [showAlterModal, setShowAlterModal] = useState(false);
 
   const refreshGameState = async () => {
     try {
@@ -38,10 +41,15 @@ function Game() {
   }, [lobbyId, playerId]);
 
   useEffect(() => {
-    connectToGameSocket(lobbyId, setCurrentPlayerId, refreshGameState, (cards) => {
+    connectToGameSocket(lobbyId, setCurrentPlayerId, refreshGameState,
+      cards => {
       setFutureCards(cards);
       setShowFutureModal(true);
-    });
+      },
+      cards => {
+       setAlterCards(cards);
+       setShowAlterModal(true) 
+      });
     return () => disconnectGameSocket();
   }, [lobbyId]);
 
@@ -214,6 +222,115 @@ function Game() {
           </button>
         </Box>
       )}
+      {showAlterModal && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '25%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#fff',
+            padding: 6,
+            borderRadius: 6,
+            boxShadow: '0 0 30px rgba(0,0,0,0.6)',
+            zIndex: 1000,
+            minWidth: 600
+          }}
+        >
+          <DragDropContext
+            onDragEnd={(result) => {
+              const { source, destination } = result;
+              if (!destination) return;
+              const updated = [...alterCards];
+              const [removed] = updated.splice(source.index, 1);
+              updated.splice(destination.index, 0, removed);
+              setAlterCards(updated);
+            }}
+            // enableDefaultSensors = {false}
+          >
+            <Droppable droppableId="alter-deck" direction="horizontal">
+              {(provided) => (
+                <Box
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  sx={{ display: 'flex', gap: 2 }}
+                >
+                  {alterCards.map((card, index) => (
+                    <Draggable draggableId={card + index} index={index} key={card + index}>
+                      {(provided, snapshot) => (
+                        <img
+                          src={`/assets/cards/${card}.jpg`}
+                          alt={card}
+                          width={200}
+                          ref={(node) => {
+                            provided.innerRef(node);
+                            // Fix drag preview image after element is available
+                            if (node && node.complete) {
+                              const transparentImg = new Image();
+                              transparentImg.src =
+                                'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                              node.addEventListener('dragstart', (e) => {
+                                e.dataTransfer.setDragImage(transparentImg, 0, 0);
+                              });
+                            } else if (node) {
+                              node.onload = () => {
+                                const transparentImg = new Image();
+                                transparentImg.src =
+                                  'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+                                node.addEventListener('dragstart', (e) => {
+                                  e.dataTransfer.setDragImage(transparentImg, 0, 0);
+                                });
+                              };
+                            }
+                          }}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            borderRadius: 12,
+                            boxShadow: '0 0 15px rgba(0,0,0,0.3)',
+                            opacity: snapshot.isDragging ? 0.85 : 1,
+                            transition: 'transform 0.15s ease',
+                          }}
+                        />
+                      )}
+                    </Draggable>
+
+                  ))}
+                  {provided.placeholder}
+                </Box>
+              )}
+            </Droppable>
+          </DragDropContext>
+
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, width: '100%' }}>
+            <button
+              onClick={async () => {
+                try {
+                  await axios.post(`http://localhost:8082/game/alter/${lobbyId}`, alterCards, {
+                    params: { playerId }
+                  });
+                  setShowAlterModal(false);
+                } catch (err) {
+                  console.error("Failed to update deck order", err);
+                }
+              }}
+              style={{
+                marginTop: 16,
+                padding: '10px 20px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                backgroundColor: '#2196f3',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              Confirm Order
+            </button>
+          </Box>
+        </Box>
+      )}      
     </Box>
   );
 }
