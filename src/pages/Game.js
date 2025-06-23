@@ -21,6 +21,8 @@ function Game() {
   const [favorFrom, setFavorFrom] = useState(null);
   const [showFavorSelectModal, setShowFavorSelectModal] = useState(false);
   const [showGiveCardModal, setShowGiveCardModal] = useState(false);
+  const [targetedAttackTargets, setTargetedAttackTargets] = useState([]);
+  const [showTargetedAttackModal, setShowTargetedAttackModal] = useState(false);
 
   const modalStyle = {
   position: 'absolute',
@@ -68,7 +70,8 @@ function Game() {
        setShowAlterModal(true) 
       },
       targets => { setFavorTargets(targets); setShowFavorSelectModal(true);},
-      fromId => { setFavorFrom(fromId); setShowGiveCardModal(true); }
+      fromId => { setFavorFrom(fromId); setShowGiveCardModal(true); },
+      (targets) => { setTargetedAttackTargets(targets); setShowTargetedAttackModal(true) }
     );
     return () => disconnectGameSocket();
   }, [lobbyId]);
@@ -399,6 +402,29 @@ function Game() {
               />
             ))}
           </Box>
+        </Box>
+      )}
+      {showTargetedAttackModal && (
+        <Box sx={{ ...modalStyle }}>
+          <Typography>Select a player to attack:</Typography>
+          <Stack direction="row" spacing={2}>
+            {targetedAttackTargets.map(pid => {
+              const player = participants.find(p => p.playerId === pid);
+              return (
+                <button
+                  key={pid}
+                  onClick={async () => {
+                    await axios.post(`http://localhost:8082/game/targeted/confirm/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowTargetedAttackModal(false);
+                  }}
+                >
+                  {player?.name || pid}
+                </button>
+              );
+            })}
+          </Stack>
         </Box>
       )}
     </Box>
