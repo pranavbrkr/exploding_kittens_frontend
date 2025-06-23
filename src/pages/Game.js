@@ -17,6 +17,23 @@ function Game() {
   const [showFutureModal, setShowFutureModal] = useState(false);
   const [alterCards, setAlterCards] = useState([])
   const [showAlterModal, setShowAlterModal] = useState(false);
+  const [favorTargets, setFavorTargets] = useState([]);
+  const [favorFrom, setFavorFrom] = useState(null);
+  const [showFavorSelectModal, setShowFavorSelectModal] = useState(false);
+  const [showGiveCardModal, setShowGiveCardModal] = useState(false);
+
+  const modalStyle = {
+  position: 'absolute',
+  top: '25%',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  backgroundColor: '#fff',
+  padding: 6,
+  borderRadius: 6,
+  boxShadow: '0 0 30px rgba(0,0,0,0.6)',
+  zIndex: 1000,
+  minWidth: 600
+};
 
   const refreshGameState = async () => {
     try {
@@ -49,7 +66,10 @@ function Game() {
       cards => {
        setAlterCards(cards);
        setShowAlterModal(true) 
-      });
+      },
+      targets => { setFavorTargets(targets); setShowFavorSelectModal(true);},
+      fromId => { setFavorFrom(fromId); setShowGiveCardModal(true); }
+    );
     return () => disconnectGameSocket();
   }, [lobbyId]);
 
@@ -330,7 +350,57 @@ function Game() {
             </button>
           </Box>
         </Box>
-      )}      
+      )}
+      {showFavorSelectModal && (
+        <Box sx={{ ...modalStyle }}>
+          <Typography>Select a player to request favor from:</Typography>
+          <Stack direction="row" spacing={2}>
+            {favorTargets.map(pid => {
+              const player = participants.find(p => p.playerId === pid);
+              return (
+                <button
+                  key={pid}
+                  onClick={async () => {
+                    await axios.post(`http://localhost:8082/game/favor/request/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowFavorSelectModal(false);
+                  }}
+                >
+                  {player?.name || pid}
+                </button>
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
+      {showGiveCardModal && (
+        <Box sx={{ ...modalStyle }}>
+          <Typography>Select a card to give to the favor requester:</Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {hand.map((card, idx) => (
+              <img
+                key={idx}
+                src={`/assets/cards/${card}.jpg`}
+                alt={card}
+                width={100}
+                onClick={async () => {
+                  await axios.post(`http://localhost:8082/game/favor/response/${lobbyId}`, null, {
+                    params: {
+                      fromPlayerId: playerId,
+                      toPlayerId: favorFrom,
+                      givenCard: card
+                    }
+                  });
+                  setHand(prev => prev.filter((_, i) => i !== idx));
+                  setShowGiveCardModal(false);
+                }}
+                style={{ cursor: 'pointer' }}
+              />
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

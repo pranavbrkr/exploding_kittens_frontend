@@ -5,10 +5,14 @@ import useGameStore from "../store/useGameStore";
 let stompClient = null;
 let onFuturePeek = null;
 let onAlterFuture = null;
+let onFavorTargetRequest = null;
+let onFavorRequest = null;
 
-export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback) => {
+export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback, favorTargetCallback, favorRequestCallback) => {
   onFuturePeek = futurePeekCallback
   onAlterFuture = alterFutureCallback
+  onFavorTargetRequest = favorTargetCallback;
+  onFavorRequest = favorRequestCallback;
 
   const socket = new SockJS("http://localhost:8082/ws-game");
   stompClient = new Client({
@@ -30,6 +34,16 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
       stompClient.subscribe(`/topic/game/${lobbyId}/alter/${useGameStore.getState().playerId}`, (msg) => {
         const cards = JSON.parse(msg.body);
         if (onAlterFuture) onAlterFuture(cards);
+      });
+
+      stompClient.subscribe(`/topic/game/${lobbyId}/favor/select/${useGameStore.getState().playerId}`, (msg) => {
+        const targets = JSON.parse(msg.body);
+        if (onFavorTargetRequest) onFavorTargetRequest(targets);
+      });
+
+      stompClient.subscribe(`/topic/game/${lobbyId}/favor/request/${useGameStore.getState().playerId}`, (msg) => {
+        const fromPlayerId = msg.body;
+        if (onFavorRequest) onFavorRequest(fromPlayerId);
       });
     },
   });
