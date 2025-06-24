@@ -52,6 +52,16 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
         const targets = JSON.parse(msg.body);
         if (onTargetedAttackRequest) onTargetedAttackRequest(targets);
       });
+
+      stompClient.subscribe(`/topic/game/${lobbyId}/cat/select-opponent/${useGameStore.getState().playerId}`, (msg) => {
+        const targets = JSON.parse(msg.body);
+        if (window.onCatOpponentSelect) window.onCatOpponentSelect(targets);
+      });
+
+      stompClient.subscribe(`/topic/game/${lobbyId}/cat/select-number/${useGameStore.getState().playerId}`, (msg) => {
+        const options = JSON.parse(msg.body);
+        if (window.onCatIndexSelect) window.onCatIndexSelect(options);
+      });
     },
   });
   stompClient.activate();

@@ -23,6 +23,12 @@ function Game() {
   const [showGiveCardModal, setShowGiveCardModal] = useState(false);
   const [targetedAttackTargets, setTargetedAttackTargets] = useState([]);
   const [showTargetedAttackModal, setShowTargetedAttackModal] = useState(false);
+  const [selectedCatCards, setSelectedCatCards] = useState([]);
+  const [showStealButton, setShowStealButton] = useState(false);
+  const [catTargets, setCatTargets] = useState([]);
+  const [showCatOpponentModal, setShowCatOpponentModal] = useState(false);
+  const [catStealOptions, setCatStealOptions] = useState([]);
+  const [showCatIndexModal, setShowCatIndexModal] = useState(false);
 
   const modalStyle = {
   position: 'absolute',
@@ -73,6 +79,15 @@ function Game() {
       fromId => { setFavorFrom(fromId); setShowGiveCardModal(true); },
       (targets) => { setTargetedAttackTargets(targets); setShowTargetedAttackModal(true) }
     );
+    window.onCatOpponentSelect = (targets) => {
+      setCatTargets(targets);
+      setShowCatOpponentModal(true);
+    };
+
+    window.onCatIndexSelect = (indices) => {
+      setCatStealOptions(indices);
+      setShowCatIndexModal(true);
+    };
     return () => disconnectGameSocket();
   }, [lobbyId]);
 
@@ -101,16 +116,16 @@ function Game() {
       </Stack>
 
       {/* Center - Used Card */}
-<Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-  {latestUsedCard && (
-    <img
-      src={`/assets/cards/${latestUsedCard}.jpg`}
-      alt={latestUsedCard}
-      width={100}
-      style={{ borderRadius: 12, boxShadow: '0 0 10px rgba(0,0,0,0.3)' }}
-    />
-  )}
-</Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        {latestUsedCard && (
+          <img
+            src={`/assets/cards/${latestUsedCard}.jpg`}
+            alt={latestUsedCard}
+            width={100}
+            style={{ borderRadius: 12, boxShadow: '0 0 10px rgba(0,0,0,0.3)' }}
+          />
+        )}
+      </Box>
 
       {/* Right - Deck */}
       <Box sx={{ position: 'absolute', top: 32, right: 32 }}>
@@ -157,9 +172,43 @@ function Game() {
             src={`/assets/cards/${card}.jpg`}
             alt={card}
             width={80}
-            style={{ margin: '0 8px 12px 8px', cursor: 'pointer' }}
+            style={{ margin: '0 8px 12px 8px', cursor: 'pointer',
+              border:
+                selectedCatCards.some(c => c.index === idx)
+                  ? '4px solid #9c27b0' // violet border
+                  : '2px solid transparent',
+              boxShadow:
+                selectedCatCards.some(c => c.index === idx)
+                  ? '0 0 12px 4px #9c27b080' // violet glow
+                  : 'none',
+              transition: 'box-shadow 0.2s ease, border 0.2s ease'
+            }}
             onClick={async () => {
               if (playerId !== currentPlayerId) return;
+
+              // cat card
+              if (card.startsWith("CAT_")) {
+                const alreadySelected = selectedCatCards.find(c => c.index === idx);
+
+                if (alreadySelected) {
+                  const newSelection = selectedCatCards.filter(c => c.index !== idx);
+                  setSelectedCatCards(newSelection);
+                  setShowStealButton(newSelection.length === 2 && newSelection[0].card === newSelection[1].card);
+                } else {
+                  const newSelection = [...selectedCatCards, { card, index: idx }];
+
+                  if (newSelection.length > 2 || (newSelection.length === 2 && newSelection[0].card !== newSelection[1].card)) {
+                    setSelectedCatCards([{ card, index: idx }]);
+                    setShowStealButton(false);
+                  } else {
+                    setSelectedCatCards(newSelection);
+                    setShowStealButton(newSelection.length === 2 && newSelection[0].card === newSelection[1].card);
+                  }
+                }
+                return;
+              }
+
+              // normal play
               try {
                 await axios.post(`http://localhost:8082/game/play/${lobbyId}`, null, {
                   params: { playerId, cardType: card },
@@ -424,6 +473,88 @@ function Game() {
                 </button>
               );
             })}
+          </Stack>
+        </Box>
+      )}
+      {showStealButton && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <button
+            onClick={async () => {
+              setShowStealButton(false);
+
+              // Remove selected cat cards from hand
+              const updatedHand = hand.filter((_, i) =>
+                !selectedCatCards.some(c => c.index === i)
+              );
+              setHand(updatedHand);
+
+              // Clear selection after removal
+              setSelectedCatCards([]);
+
+              try {
+                const res = await axios.get(`http://localhost:8082/game/cat/opponents/${lobbyId}`, {
+                  params: { playerId }
+                });
+                window.onCatOpponentSelect(res.data);
+              } catch (err) {
+                console.error("Failed to get opponents", err);
+              }
+            }}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#6a1b9a',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            Steal Card
+          </button>
+        </Box>
+      )}
+      {showCatOpponentModal && (
+        <Box sx={modalStyle}>
+          <Typography>Select an opponent to steal from:</Typography>
+          <Stack direction="row" spacing={2}>
+            {catTargets.map(pid => {
+              const player = participants.find(p => p.playerId === pid);
+              return (
+                <button
+                  key={pid}
+                  onClick={async () => {
+                    await axios.post(`http://localhost:8082/game/cat/steal/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowCatOpponentModal(false);
+                  }}
+                >
+                  {player?.name || pid}
+                </button>
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
+      {showCatIndexModal && (
+        <Box sx={modalStyle}>
+          <Typography>Select a number to steal that card:</Typography>
+          <Stack direction="row" spacing={2}>
+            {catStealOptions.map(index => (
+              <button
+                key={index}
+                onClick={async () => {
+                  await axios.post(`http://localhost:8082/game/cat/steal/resolve/${lobbyId}`, null, {
+                    params: { stealerId: playerId, selectedIndex: index }
+                  });
+                  setShowCatIndexModal(false);
+                  await refreshGameState();
+                }}
+              >
+                {index}
+              </button>
+            ))}
           </Stack>
         </Box>
       )}
