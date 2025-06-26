@@ -29,6 +29,8 @@ function Game() {
   const [showCatOpponentModal, setShowCatOpponentModal] = useState(false);
   const [catStealOptions, setCatStealOptions] = useState([]);
   const [showCatIndexModal, setShowCatIndexModal] = useState(false);
+  const [showDefuseStealButton, setShowDefuseStealButton] = useState(false);
+  const [showDefuseStealModal, setShowDefuseStealModal] = useState(false);
 
   const modalStyle = {
   position: 'absolute',
@@ -189,22 +191,36 @@ function Game() {
               // cat card
               if (card.startsWith("CAT_")) {
                 const alreadySelected = selectedCatCards.find(c => c.index === idx);
+                let newSelection;
 
                 if (alreadySelected) {
-                  const newSelection = selectedCatCards.filter(c => c.index !== idx);
-                  setSelectedCatCards(newSelection);
-                  setShowStealButton(newSelection.length === 2 && newSelection[0].card === newSelection[1].card);
+                  newSelection = selectedCatCards.filter(c => c.index !== idx);
                 } else {
-                  const newSelection = [...selectedCatCards, { card, index: idx }];
-
-                  if (newSelection.length > 2 || (newSelection.length === 2 && newSelection[0].card !== newSelection[1].card)) {
-                    setSelectedCatCards([{ card, index: idx }]);
-                    setShowStealButton(false);
-                  } else {
-                    setSelectedCatCards(newSelection);
-                    setShowStealButton(newSelection.length === 2 && newSelection[0].card === newSelection[1].card);
-                  }
+                  newSelection = [...selectedCatCards, { card, index: idx }];
                 }
+
+                setSelectedCatCards(newSelection);
+
+                const catCounts = newSelection.reduce((acc, cur) => {
+                  acc[cur.card] = (acc[cur.card] || 0) + 1;
+                  return acc;
+                }, {});
+
+                const matchedCat = Object.keys(catCounts).find(k => catCounts[k] === 2);
+                const matchedThree = Object.keys(catCounts).find(k => catCounts[k] === 3);
+
+                if (matchedCat) {
+                  setShowStealButton(true);
+                } else {
+                  setShowStealButton(false);
+                }
+
+                if (matchedThree) {
+                  setShowDefuseStealButton(true); // new state below
+                } else {
+                  setShowDefuseStealButton(false);
+                }
+
                 return;
               }
 
@@ -514,6 +530,35 @@ function Game() {
           </button>
         </Box>
       )}
+      {showDefuseStealButton && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <button
+            onClick={async () => {
+              try {
+                const res = await axios.get(`http://localhost:8082/game/cat/opponents/${lobbyId}`, {
+                  params: { playerId }
+                });
+                setCatTargets(res.data);
+                setShowDefuseStealModal(true);
+              } catch (err) {
+                console.error("Failed to get opponents", err);
+              }
+            }}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#f50057',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            Steal Defuse
+          </button>
+        </Box>
+      )}
+
       {showCatOpponentModal && (
         <Box sx={modalStyle}>
           <Typography>Select an opponent to steal from:</Typography>
@@ -528,6 +573,32 @@ function Game() {
                       params: { fromPlayerId: playerId, toPlayerId: pid }
                     });
                     setShowCatOpponentModal(false);
+                  }}
+                >
+                  {player?.name || pid}
+                </button>
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
+      {showDefuseStealModal && (
+        <Box sx={modalStyle}>
+          <Typography>Select a player to steal DEFUSE from:</Typography>
+          <Stack direction="row" spacing={2}>
+            {catTargets.map(pid => {
+              const player = participants.find(p => p.playerId === pid);
+              return (
+                <button
+                  key={pid}
+                  onClick={async () => {
+                    await axios.post(`http://localhost:8082/game/cat/steal-defuse/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowDefuseStealModal(false);
+                    setSelectedCatCards([]);
+                    setShowDefuseStealButton(false);
+                    await refreshGameState();
                   }}
                 >
                   {player?.name || pid}
