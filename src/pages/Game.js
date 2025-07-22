@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import useGameStore from "../store/useGameStore";
-import { Box, Typography, Avatar, Stack } from "@mui/material";
+import { Box, Typography, Avatar, Stack, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { connectToGameSocket, disconnectGameSocket } from "../ws/GameSocket";
@@ -420,14 +420,32 @@ function Game() {
         </Box>
       )}
       {showFavorSelectModal && (
-        <Box sx={{ ...modalStyle }}>
-          <Typography>Select a player to request favor from:</Typography>
-          <Stack direction="row" spacing={2}>
+        <Box sx={{ ...modalStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography align="center" sx={{ mb: 2 }}>Select a player to request favor from:</Typography>
+          <Stack direction="row" spacing={2} justifyContent="center" alignItems="center">
             {favorTargets.map(pid => {
               const player = participants.find(p => p.playerId === pid);
               return (
-                <button
+                <Button
                   key={pid}
+                  variant="contained"
+                  sx={{
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    fontSize: 18,
+                    px: 3,
+                    py: 1.5,
+                    boxShadow: 2,
+                    background: '#e0e0e0',
+                    color: '#333',
+                    transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      background: '#bdbdbd',
+                      color: '#212121',
+                      boxShadow: 4,
+                      border: '2px solid #3a3ad6',
+                    }
+                  }}
                   onClick={async () => {
                     await axios.post(`http://localhost:8082/game/favor/request/${lobbyId}`, null, {
                       params: { fromPlayerId: playerId, toPlayerId: pid }
@@ -436,48 +454,79 @@ function Game() {
                   }}
                 >
                   {player?.name || pid}
-                </button>
+                </Button>
               );
             })}
           </Stack>
         </Box>
       )}
       {showGiveCardModal && (
-        <Box sx={{ ...modalStyle }}>
-          <Typography>Select a card to give to the favor requester:</Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {hand.map((card, idx) => (
-              <img
-                key={idx}
-                src={`/assets/cards/${card}.jpg`}
-                alt={card}
-                width={100}
-                onClick={async () => {
-                  await axios.post(`http://localhost:8082/game/favor/response/${lobbyId}`, null, {
-                    params: {
-                      fromPlayerId: playerId,
-                      toPlayerId: favorFrom,
-                      givenCard: card
-                    }
-                  });
-                  setHand(prev => prev.filter((_, i) => i !== idx));
-                  setShowGiveCardModal(false);
-                }}
-                style={{ cursor: 'pointer' }}
-              />
-            ))}
+        <>
+          <Box
+            sx={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100vw',
+              height: '100vh',
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 999,
+            }}
+          />
+          <Box sx={{ ...modalStyle, zIndex: 1000 }}>
+            <Typography>Select a card to give to the favor requester:</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {hand.map((card, idx) => (
+                <img
+                  key={idx}
+                  src={`/assets/cards/${card}.jpg`}
+                  alt={card}
+                  width={100}
+                  onClick={async () => {
+                    await axios.post(`http://localhost:8082/game/favor/response/${lobbyId}`, null, {
+                      params: {
+                        fromPlayerId: playerId,
+                        toPlayerId: favorFrom,
+                        givenCard: card
+                      }
+                    });
+                    setHand(prev => prev.filter((_, i) => i !== idx));
+                    setShowGiveCardModal(false);
+                  }}
+                  style={{ cursor: 'pointer' }}
+                />
+              ))}
+            </Box>
           </Box>
-        </Box>
+        </>
       )}
       {showTargetedAttackModal && (
-        <Box sx={{ ...modalStyle }}>
-          <Typography>Select a player to attack:</Typography>
-          <Stack direction="row" spacing={2}>
+        <Box sx={{ ...modalStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography align="center" sx={{ mb: 2 }}>Select a player to attack:</Typography>
+          <Stack direction="row" spacing={2} justifyContent="center" alignItems="center">
             {targetedAttackTargets.map(pid => {
               const player = participants.find(p => p.playerId === pid);
               return (
-                <button
+                <Button
                   key={pid}
+                  variant="contained"
+                  sx={{
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    fontSize: 18,
+                    px: 3,
+                    py: 1.5,
+                    boxShadow: 2,
+                    background: '#e0e0e0',
+                    color: '#333',
+                    transition: 'background 0.2s, color 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      background: '#bdbdbd',
+                      color: '#212121',
+                      boxShadow: 4,
+                      border: '2px solid #ff1744',
+                    }
+                  }}
                   onClick={async () => {
                     await axios.post(`http://localhost:8082/game/targeted/confirm/${lobbyId}`, null, {
                       params: { fromPlayerId: playerId, toPlayerId: pid }
@@ -486,7 +535,7 @@ function Game() {
                   }}
                 >
                   {player?.name || pid}
-                </button>
+                </Button>
               );
             })}
           </Stack>
@@ -566,8 +615,24 @@ function Game() {
             {catTargets.map(pid => {
               const player = participants.find(p => p.playerId === pid);
               return (
-                <button
+                <Button
                   key={pid}
+                  variant="contained"
+                  color="secondary"
+                  sx={{
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    fontSize: 18,
+                    px: 3,
+                    py: 1.5,
+                    boxShadow: 2,
+                    background: 'linear-gradient(90deg, #9c27b0 60%, #ce93d8 100%)',
+                    color: 'white',
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #ce93d8 60%, #9c27b0 100%)',
+                      boxShadow: 4
+                    }
+                  }}
                   onClick={async () => {
                     await axios.post(`http://localhost:8082/game/cat/steal/${lobbyId}`, null, {
                       params: { fromPlayerId: playerId, toPlayerId: pid }
@@ -576,7 +641,7 @@ function Game() {
                   }}
                 >
                   {player?.name || pid}
-                </button>
+                </Button>
               );
             })}
           </Stack>
@@ -589,8 +654,24 @@ function Game() {
             {catTargets.map(pid => {
               const player = participants.find(p => p.playerId === pid);
               return (
-                <button
+                <Button
                   key={pid}
+                  variant="contained"
+                  color="warning"
+                  sx={{
+                    borderRadius: 3,
+                    fontWeight: 'bold',
+                    fontSize: 18,
+                    px: 3,
+                    py: 1.5,
+                    boxShadow: 2,
+                    background: 'linear-gradient(90deg, #f50057 60%, #ffb300 100%)',
+                    color: 'white',
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #ffb300 60%, #f50057 100%)',
+                      boxShadow: 4
+                    }
+                  }}
                   onClick={async () => {
                     await axios.post(`http://localhost:8082/game/cat/steal-defuse/${lobbyId}`, null, {
                       params: { fromPlayerId: playerId, toPlayerId: pid }
@@ -602,7 +683,7 @@ function Game() {
                   }}
                 >
                   {player?.name || pid}
-                </button>
+                </Button>
               );
             })}
           </Stack>
@@ -613,8 +694,24 @@ function Game() {
           <Typography>Select a number to steal that card:</Typography>
           <Stack direction="row" spacing={2}>
             {catStealOptions.map(index => (
-              <button
+              <Button
                 key={index}
+                variant="contained"
+                color="secondary"
+                sx={{
+                  borderRadius: 3,
+                  fontWeight: 'bold',
+                  fontSize: 18,
+                  px: 3,
+                  py: 1.5,
+                  boxShadow: 2,
+                  background: 'linear-gradient(90deg, #9c27b0 60%, #ce93d8 100%)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(90deg, #ce93d8 60%, #9c27b0 100%)',
+                    boxShadow: 4
+                  }
+                }}
                 onClick={async () => {
                   await axios.post(`http://localhost:8082/game/cat/steal/resolve/${lobbyId}`, null, {
                     params: { stealerId: playerId, selectedIndex: index }
@@ -624,7 +721,7 @@ function Game() {
                 }}
               >
                 {index}
-              </button>
+              </Button>
             ))}
           </Stack>
         </Box>
