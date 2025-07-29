@@ -31,6 +31,8 @@ function Game() {
   const [showCatIndexModal, setShowCatIndexModal] = useState(false);
   const [showDefuseStealButton, setShowDefuseStealButton] = useState(false);
   const [showDefuseStealModal, setShowDefuseStealModal] = useState(false);
+  const [gameWinner, setGameWinner] = useState(null);
+  const [eliminationNotification, setEliminationNotification] = useState(null);
 
   const modalStyle = {
   position: 'absolute',
@@ -52,12 +54,28 @@ function Game() {
 
       const current = gameState.players[gameState.currentPlayerIndex]?.playerId;
       if (current) setCurrentPlayerId(current);
-      setEliminatedPlayers(gameState.eliminatedPlayers || []);
+      
+      // Check for new eliminations
+      const newEliminatedPlayers = gameState.eliminatedPlayers || [];
+      const newlyEliminated = newEliminatedPlayers.filter(id => !eliminatedPlayers.includes(id));
+      if (newlyEliminated.length > 0) {
+        const eliminatedPlayerName = participants.find(p => p.playerId === newlyEliminated[0])?.name || 'Unknown Player';
+        setEliminationNotification(`${eliminatedPlayerName} was eliminated! 💥`);
+        setTimeout(() => setEliminationNotification(null), 3000); // Clear after 3 seconds
+      }
+      
+      setEliminatedPlayers(newEliminatedPlayers);
 
       setUsedCards(gameState.usedCards || []);
 
       const player = gameState.players.find(p => p.playerId === playerId);
       if (player) setHand(player.hand);
+      
+      // Check for game winner
+      const winnerRes = await axios.get(`http://localhost:8082/game/${lobbyId}/winner`);
+      if (winnerRes.data) {
+        setGameWinner(winnerRes.data);
+      }
     } catch (err) {
       console.log("Failed to refresh game state", err);
     }
@@ -97,24 +115,80 @@ function Game() {
 
   return (
     <Box sx={{ height: '100vh', backgroundColor: '#3a3ad6', p: 4, position: 'relative' }}>
+      {/* Elimination Notification */}
+      {eliminationNotification && (
+        <Box sx={{
+          position: 'absolute',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: 'red',
+          color: 'white',
+          padding: 2,
+          borderRadius: 2,
+          zIndex: 1001,
+          animation: 'fadeInOut 3s ease-in-out'
+        }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            {eliminationNotification}
+          </Typography>
+        </Box>
+      )}
 
       {/* Top Row - Players */}
       <Stack direction="row" spacing={4} justifyContent="center" mb={4}>
-        {participants.map(p => (
-          <Box key={p.playerId}>
-            <Avatar 
-              sx={{ 
-                width: 60, 
-                height: 60, 
-                bgcolor: eliminatedPlayers.includes(p.playerId)
-                  ? 'red'
-                  : p.playerId === currentPlayerId ? 'yellow' : 'transparent', 
-                border: '5px solid black' 
-              }}
-            />
-            <Typography color="white" align="center">{p.name}</Typography>
-          </Box>
-        ))}
+        {participants.map(p => {
+          const isEliminated = eliminatedPlayers.includes(p.playerId);
+          const isCurrentPlayer = p.playerId === currentPlayerId;
+          
+          return (
+            <Box key={p.playerId} sx={{ textAlign: 'center' }}>
+              <Avatar 
+                sx={{ 
+                  width: 60, 
+                  height: 60, 
+                  bgcolor: isEliminated ? 'red' : isCurrentPlayer ? 'yellow' : 'transparent', 
+                  border: '5px solid black',
+                  opacity: isEliminated ? 0.6 : 1,
+                  position: 'relative'
+                }}
+              />
+              {isEliminated && (
+                <Typography 
+                  variant="caption" 
+                  color="red" 
+                  sx={{ 
+                    position: 'absolute',
+                    top: -10,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    backgroundColor: 'white',
+                    padding: '2px 6px',
+                    borderRadius: 1,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ELIMINATED
+                </Typography>
+              )}
+              <Typography 
+                color="white" 
+                align="center"
+                sx={{ 
+                  textDecoration: isEliminated ? 'line-through' : 'none',
+                  opacity: isEliminated ? 0.6 : 1
+                }}
+              >
+                {p.name}
+              </Typography>
+              {isCurrentPlayer && !isEliminated && p.playerId === playerId && (
+                <Typography variant="caption" color="yellow" sx={{ fontWeight: 'bold' }}>
+                  YOUR TURN
+                </Typography>
+              )}
+            </Box>
+          );
+        })}
       </Stack>
 
       {/* Center - Used Card */}
@@ -726,6 +800,32 @@ function Game() {
           </Stack>
         </Box>
       )}
+             {gameWinner && (
+         <Box sx={{ 
+           position: 'absolute', 
+           top: '50%', 
+           left: '50%', 
+           transform: 'translate(-50%, -50%)', 
+           zIndex: 1000,
+           backgroundColor: 'rgba(0,0,0,0.9)',
+           padding: 4,
+           borderRadius: 2,
+           textAlign: 'center'
+         }}>
+           <Typography variant="h4" color="white" sx={{ mb: 2 }}>🎉 Game Over! 🎉</Typography>
+           <Typography variant="h6" color="white" sx={{ mb: 2 }}>
+             Winner: {participants.find(p => p.playerId === gameWinner)?.name || gameWinner}
+           </Typography>
+           <Button
+             variant="contained"
+             color="primary"
+             sx={{ mt: 2 }}
+             onClick={() => window.location.href = `/lobby/${lobbyId}`}
+           >
+             Back to Lobby
+           </Button>
+         </Box>
+       )}
     </Box>
   );
 }
