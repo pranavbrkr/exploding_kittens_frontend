@@ -128,25 +128,50 @@ function Game() {
 
   return (
     <Box sx={{ height: '100vh', backgroundColor: '#3a3ad6', p: 4, position: 'relative' }}>
-      {/* Elimination Notification */}
-      {eliminationNotification && (
-        <Box sx={{
-          position: 'absolute',
-          top: 20,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          backgroundColor: 'red',
-          color: 'white',
-          padding: 2,
-          borderRadius: 2,
-          zIndex: 1001,
-          animation: 'fadeInOut 3s ease-in-out'
-        }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            {eliminationNotification}
-          </Typography>
-        </Box>
-      )}
+             {/* Elimination Notification */}
+       {eliminationNotification && (
+         <Box sx={{
+           position: 'absolute',
+           top: 20,
+           left: 20,
+           backgroundColor: '#d66f6f',
+           color: 'white',
+           padding: 2,
+           borderRadius: 2,
+           zIndex: 1001,
+           display: 'flex',
+           alignItems: 'center',
+           gap: 2,
+           minWidth: 300
+         }}>
+           <Typography variant="h6" sx={{ fontWeight: 'bold', flex: 1 }}>
+             {eliminationNotification}
+           </Typography>
+           <button
+             onClick={() => setEliminationNotification(null)}
+             style={{
+               background: 'transparent',
+               border: 'none',
+               color: 'white',
+               fontSize: '20px',
+               fontWeight: 'bold',
+               cursor: 'pointer',
+               padding: '0 4px',
+               borderRadius: '50%',
+               width: '24px',
+               height: '24px',
+               display: 'flex',
+               alignItems: 'center',
+               justifyContent: 'center',
+               transition: 'background-color 0.2s'
+             }}
+             onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+             onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+           >
+             ×
+           </button>
+         </Box>
+       )}
 
       {/* Top Row - Players */}
       <Stack direction="row" spacing={4} justifyContent="center" mb={4}>
