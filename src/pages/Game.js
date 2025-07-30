@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import useGameStore from "../store/useGameStore";
 import { Box, Typography, Avatar, Stack, Button } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { connectToGameSocket, disconnectGameSocket } from "../ws/GameSocket";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
@@ -33,6 +33,7 @@ function Game() {
   const [showDefuseStealModal, setShowDefuseStealModal] = useState(false);
   const [gameWinner, setGameWinner] = useState(null);
   const [eliminationNotification, setEliminationNotification] = useState(null);
+  const notifiedEliminationsRef = useRef(new Set());
 
   const modalStyle = {
   position: 'absolute',
@@ -57,11 +58,23 @@ function Game() {
       
       // Check for new eliminations
       const newEliminatedPlayers = gameState.eliminatedPlayers || [];
-      const newlyEliminated = newEliminatedPlayers.filter(id => !eliminatedPlayers.includes(id));
+      
+      // Find players that are newly eliminated (in newEliminatedPlayers but not in notifiedEliminations)
+      const newlyEliminated = newEliminatedPlayers.filter(id => !notifiedEliminationsRef.current.has(id));
+      
+      console.log('Current eliminated players:', newEliminatedPlayers);
+      console.log('Notified eliminations:', Array.from(notifiedEliminationsRef.current));
+      console.log('Newly eliminated:', newlyEliminated);
+      
       if (newlyEliminated.length > 0) {
         const eliminatedPlayerName = participants.find(p => p.playerId === newlyEliminated[0])?.name || 'Unknown Player';
+        console.log('Showing notification for:', eliminatedPlayerName);
         setEliminationNotification(`${eliminatedPlayerName} was eliminated! 💥`);
-        setTimeout(() => setEliminationNotification(null), 3000); // Clear after 3 seconds
+        // Clear notification after 3 seconds
+        setTimeout(() => setEliminationNotification(null), 3000);
+        
+        // Mark this elimination as notified
+        notifiedEliminationsRef.current.add(newlyEliminated[0]);
       }
       
       setEliminatedPlayers(newEliminatedPlayers);
