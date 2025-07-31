@@ -33,6 +33,7 @@ function Game() {
   const [showDefuseStealModal, setShowDefuseStealModal] = useState(false);
   const [gameWinner, setGameWinner] = useState(null);
   const [eliminationNotification, setEliminationNotification] = useState(null);
+  const [actionNotifications, setActionNotifications] = useState([]);
   const notifiedEliminationsRef = useRef(new Set());
 
   const modalStyle = {
@@ -47,6 +48,21 @@ function Game() {
   zIndex: 1000,
   minWidth: 600
 };
+
+  const addActionNotification = (message, type = 'info') => {
+    const id = Date.now() + Math.random();
+    const notification = { id, message, type };
+    setActionNotifications(prev => [...prev, notification]);
+    
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+      setActionNotifications(prev => prev.filter(n => n.id !== id));
+    }, 4000);
+  };
+
+  const removeActionNotification = (id) => {
+    setActionNotifications(prev => prev.filter(n => n.id !== id));
+  };
 
   const refreshGameState = async () => {
     try {
@@ -110,7 +126,8 @@ function Game() {
       },
       targets => { setFavorTargets(targets); setShowFavorSelectModal(true);},
       fromId => { setFavorFrom(fromId); setShowGiveCardModal(true); },
-      (targets) => { setTargetedAttackTargets(targets); setShowTargetedAttackModal(true) }
+      (targets) => { setTargetedAttackTargets(targets); setShowTargetedAttackModal(true) },
+      addActionNotification
     );
     window.onCatOpponentSelect = (targets) => {
       setCatTargets(targets);
@@ -127,7 +144,22 @@ function Game() {
   const latestUsedCard = usedCards[usedCards.length - 1];
 
   return (
-    <Box sx={{ height: '100vh', backgroundColor: '#3a3ad6', p: 4, position: 'relative' }}>
+    <Box sx={{ 
+      height: '100vh', 
+      backgroundColor: '#3a3ad6', 
+      p: 4, 
+      position: 'relative',
+      '@keyframes slideInRight': {
+        from: {
+          transform: 'translateX(100%)',
+          opacity: 0
+        },
+        to: {
+          transform: 'translateX(0)',
+          opacity: 1
+        }
+      }
+    }}>
              {/* Elimination Notification */}
        {eliminationNotification && (
          <Box sx={{
@@ -172,6 +204,65 @@ function Game() {
            </button>
          </Box>
        )}
+
+       {/* Action Notifications */}
+       <Box sx={{
+         position: 'absolute',
+         top: 80,
+         left: 20,
+         zIndex: 1000,
+         display: 'flex',
+         flexDirection: 'column',
+         gap: 1,
+         maxWidth: 400
+       }}>
+         {actionNotifications.map((notification) => (
+           <Box
+             key={notification.id}
+             sx={{
+               backgroundColor: notification.type === 'info' ? '#4a90e2' : 
+                               notification.type === 'success' ? '#4caf50' : 
+                               notification.type === 'warning' ? '#ff9800' : '#f44336',
+               color: 'white',
+               padding: 1.5,
+               borderRadius: 2,
+               display: 'flex',
+               alignItems: 'center',
+               gap: 2,
+               minWidth: 300,
+               boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+               animation: 'slideInRight 0.3s ease-out'
+             }}
+           >
+             <Typography variant="body2" sx={{ fontWeight: 'bold', flex: 1 }}>
+               {notification.message}
+             </Typography>
+             <button
+               onClick={() => removeActionNotification(notification.id)}
+               style={{
+                 background: 'transparent',
+                 border: 'none',
+                 color: 'white',
+                 fontSize: '16px',
+                 fontWeight: 'bold',
+                 cursor: 'pointer',
+                 padding: '0 2px',
+                 borderRadius: '50%',
+                 width: '20px',
+                 height: '20px',
+                 display: 'flex',
+                 alignItems: 'center',
+                 justifyContent: 'center',
+                 transition: 'background-color 0.2s'
+               }}
+               onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+               onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+             >
+               ×
+             </button>
+           </Box>
+         ))}
+       </Box>
 
       {/* Top Row - Players */}
       <Stack direction="row" spacing={4} justifyContent="center" mb={4}>

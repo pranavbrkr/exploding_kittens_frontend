@@ -8,13 +8,15 @@ let onAlterFuture = null;
 let onFavorTargetRequest = null;
 let onFavorRequest = null;
 let onTargetedAttackRequest = null;
+let onActionNotification = null;
 
-export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback, favorTargetCallback, favorRequestCallback, targetedAttackCallback) => {
+export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback, favorTargetCallback, favorRequestCallback, targetedAttackCallback, actionNotificationCallback) => {
   onFuturePeek = futurePeekCallback
   onAlterFuture = alterFutureCallback
   onFavorTargetRequest = favorTargetCallback;
   onFavorRequest = favorRequestCallback;
   onTargetedAttackRequest = targetedAttackCallback;
+  onActionNotification = actionNotificationCallback;
 
   const socket = new SockJS("http://localhost:8082/ws-game");
   stompClient = new Client({
@@ -61,6 +63,11 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
       stompClient.subscribe(`/topic/game/${lobbyId}/cat/select-number/${useGameStore.getState().playerId}`, (msg) => {
         const options = JSON.parse(msg.body);
         if (window.onCatIndexSelect) window.onCatIndexSelect(options);
+      });
+
+      stompClient.subscribe(`/topic/game/${lobbyId}/action`, (msg) => {
+        const actionData = JSON.parse(msg.body);
+        if (onActionNotification) onActionNotification(actionData.message, actionData.type);
       });
     },
   });
