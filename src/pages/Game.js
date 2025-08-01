@@ -36,6 +36,21 @@ function Game() {
   const [actionNotifications, setActionNotifications] = useState([]);
   const notifiedEliminationsRef = useRef(new Set());
 
+  // Action notification functions
+  const addActionNotification = (message, type = 'info') => {
+    const id = Date.now() + Math.random();
+    setActionNotifications(prev => [...prev, { id, message, type }]);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      removeActionNotification(id);
+    }, 5000);
+  };
+
+  const removeActionNotification = (id) => {
+    setActionNotifications(prev => prev.filter(notification => notification.id !== id));
+  };
+
   const modalStyle = {
   position: 'absolute',
   top: '25%',
@@ -48,21 +63,6 @@ function Game() {
   zIndex: 1000,
   minWidth: 600
 };
-
-  const addActionNotification = (message, type = 'info') => {
-    const id = Date.now() + Math.random();
-    const notification = { id, message, type };
-    setActionNotifications(prev => [...prev, notification]);
-    
-    // Auto-remove after 4 seconds
-    setTimeout(() => {
-      setActionNotifications(prev => prev.filter(n => n.id !== id));
-    }, 4000);
-  };
-
-  const removeActionNotification = (id) => {
-    setActionNotifications(prev => prev.filter(n => n.id !== id));
-  };
 
   const refreshGameState = async () => {
     try {
@@ -208,7 +208,7 @@ function Game() {
        {/* Action Notifications */}
        <Box sx={{
          position: 'absolute',
-         top: 80,
+         top: 80, // Positioned below elimination notification
          left: 20,
          zIndex: 1000,
          display: 'flex',
@@ -220,8 +220,8 @@ function Game() {
            <Box
              key={notification.id}
              sx={{
-               backgroundColor: notification.type === 'info' ? '#4a90e2' : 
-                               notification.type === 'success' ? '#4caf50' : 
+               backgroundColor: notification.type === 'info' ? '#4a90e2' :
+                               notification.type === 'success' ? '#4caf50' :
                                notification.type === 'warning' ? '#ff9800' : '#f44336',
                color: 'white',
                padding: 1.5,
@@ -404,25 +404,53 @@ function Game() {
 
                 setSelectedCatCards(newSelection);
 
-                const catCounts = newSelection.reduce((acc, cur) => {
+                // Check for valid cat combinations including feral cats
+                const feralCount = newSelection.filter(c => c.card === "CAT_FERAL").length;
+                const regularCats = newSelection.filter(c => c.card !== "CAT_FERAL");
+                
+                // Count regular cat types
+                const regularCatCounts = regularCats.reduce((acc, cur) => {
                   acc[cur.card] = (acc[cur.card] || 0) + 1;
                   return acc;
                 }, {});
 
-                const matchedCat = Object.keys(catCounts).find(k => catCounts[k] === 2);
-                const matchedThree = Object.keys(catCounts).find(k => catCounts[k] === 3);
+                // Check for valid combinations
+                let canStealRandom = false;
+                let canStealDefuse = false;
 
-                if (matchedCat) {
-                  setShowStealButton(true);
-                } else {
-                  setShowStealButton(false);
+                // For steal random (2 cards):
+                // 1. 2 same cat cards (any cat cards, including feral)
+                if (newSelection.length === 2) {
+                  if (newSelection[0].card === newSelection[1].card && newSelection[0].card.startsWith("CAT_")) {
+                    canStealRandom = true;
+                  }
+                  // 2. 1 feral + 1 regular cat
+                  else if (feralCount === 1 && regularCats.length === 1) {
+                    canStealRandom = true;
+                  }
                 }
 
-                if (matchedThree) {
-                  setShowDefuseStealButton(true); // new state below
-                } else {
-                  setShowDefuseStealButton(false);
+                // For steal defuse (3 cards):
+                // 1. 3 same cat cards (any cat cards, including feral)
+                if (newSelection.length === 3) {
+                  if (newSelection[0].card === newSelection[1].card && newSelection[1].card === newSelection[2].card && newSelection[0].card.startsWith("CAT_")) {
+                    canStealDefuse = true;
+                  }
+                  // 2. 2 feral + 1 regular cat
+                  else if (feralCount === 2 && regularCats.length === 1) {
+                    canStealDefuse = true;
+                  }
+                  // 3. 1 feral + 2 same regular cat cards
+                  else if (feralCount === 1 && regularCats.length === 2) {
+                    const regularCatTypes = Object.keys(regularCatCounts);
+                    if (regularCatTypes.length === 1 && regularCatCounts[regularCatTypes[0]] === 2) {
+                      canStealDefuse = true;
+                    }
+                  }
                 }
+
+                setShowStealButton(canStealRandom);
+                setShowDefuseStealButton(canStealDefuse);
 
                 return;
               }
@@ -750,22 +778,23 @@ function Game() {
             onClick={async () => {
               setShowStealButton(false);
 
-              // Remove selected cat cards from hand
-              const updatedHand = hand.filter((_, i) =>
-                !selectedCatCards.some(c => c.index === i)
-              );
-              setHand(updatedHand);
-
-              // Clear selection after removal
-              setSelectedCatCards([]);
-
+              // Send cat combo to backend
+              const catCards = selectedCatCards.map(c => c.card);
               try {
-                const res = await axios.get(`http://localhost:8082/game/cat/opponents/${lobbyId}`, {
+                await axios.post(`http://localhost:8082/game/cat-combo/${lobbyId}`, catCards, {
                   params: { playerId }
                 });
-                window.onCatOpponentSelect(res.data);
+
+                // Remove selected cat cards from hand
+                const updatedHand = hand.filter((_, i) =>
+                  !selectedCatCards.some(c => c.index === i)
+                );
+                setHand(updatedHand);
+
+                // Clear selection after removal
+                setSelectedCatCards([]);
               } catch (err) {
-                console.error("Failed to get opponents", err);
+                console.error("Failed to send cat combo", err);
               }
             }}
             style={{
@@ -786,14 +815,24 @@ function Game() {
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
           <button
             onClick={async () => {
+              // Send cat combo to backend
+              const catCards = selectedCatCards.map(c => c.card);
               try {
-                const res = await axios.get(`http://localhost:8082/game/cat/opponents/${lobbyId}`, {
+                await axios.post(`http://localhost:8082/game/cat-combo/${lobbyId}`, catCards, {
                   params: { playerId }
                 });
-                setCatTargets(res.data);
-                setShowDefuseStealModal(true);
+
+                // Remove selected cat cards from hand
+                const updatedHand = hand.filter((_, i) =>
+                  !selectedCatCards.some(c => c.index === i)
+                );
+                setHand(updatedHand);
+
+                // Clear selection after removal
+                setSelectedCatCards([]);
+                setShowDefuseStealButton(false);
               } catch (err) {
-                console.error("Failed to get opponents", err);
+                console.error("Failed to send cat combo", err);
               }
             }}
             style={{
@@ -850,48 +889,7 @@ function Game() {
           </Stack>
         </Box>
       )}
-      {showDefuseStealModal && (
-        <Box sx={modalStyle}>
-          <Typography>Select a player to steal DEFUSE from:</Typography>
-          <Stack direction="row" spacing={2}>
-            {catTargets.map(pid => {
-              const player = participants.find(p => p.playerId === pid);
-              return (
-                <Button
-                  key={pid}
-                  variant="contained"
-                  color="warning"
-                  sx={{
-                    borderRadius: 3,
-                    fontWeight: 'bold',
-                    fontSize: 18,
-                    px: 3,
-                    py: 1.5,
-                    boxShadow: 2,
-                    background: 'linear-gradient(90deg, #f50057 60%, #ffb300 100%)',
-                    color: 'white',
-                    '&:hover': {
-                      background: 'linear-gradient(90deg, #ffb300 60%, #f50057 100%)',
-                      boxShadow: 4
-                    }
-                  }}
-                  onClick={async () => {
-                    await axios.post(`http://localhost:8082/game/cat/steal-defuse/${lobbyId}`, null, {
-                      params: { fromPlayerId: playerId, toPlayerId: pid }
-                    });
-                    setShowDefuseStealModal(false);
-                    setSelectedCatCards([]);
-                    setShowDefuseStealButton(false);
-                    await refreshGameState();
-                  }}
-                >
-                  {player?.name || pid}
-                </Button>
-              );
-            })}
-          </Stack>
-        </Box>
-      )}
+
       {showCatIndexModal && (
         <Box sx={modalStyle}>
           <Typography>Select a number to steal that card:</Typography>
