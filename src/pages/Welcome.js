@@ -13,7 +13,7 @@ function Welcome() {
     if (name.trim() === '') return;
 
     try {
-      const res = await axios.post("http://localhost:8080/player/register", { name });
+      const res = await axios.post("http://localhost:8080/api/player/register", { name });
       const player = res.data;
       setPlayer(player.playerId, player.name)
       navigate("/waiting");

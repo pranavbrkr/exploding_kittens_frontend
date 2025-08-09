@@ -72,11 +72,11 @@ function Game() {
 
   const removeActionNotification = (id) => {
     setActionNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
+};
 
   const refreshGameState = async () => {
     try {
-      const res = await axios.get(`http://localhost:8082/game/${lobbyId}`);
+      const res = await axios.get(`http://localhost:8082/api/game/${lobbyId}`);
       const gameState = res.data;
 
       const current = gameState.players[gameState.currentPlayerIndex]?.playerId;
@@ -105,7 +105,7 @@ function Game() {
       if (player) setHand(player.hand);
       
       // Check for game winner
-      const winnerRes = await axios.get(`http://localhost:8082/game/${lobbyId}/winner`);
+      const winnerRes = await axios.get(`http://localhost:8082/api/game/${lobbyId}/winner`);
       if (winnerRes.data) {
         setGameWinner(winnerRes.data);
       }
@@ -116,20 +116,20 @@ function Game() {
 
   // Card click handler with cat combo logic
   const handleCardClick = async (card, idx) => {
-    if (playerId !== currentPlayerId) return;
+              if (playerId !== currentPlayerId) return;
 
     // Cat card selection logic
-    if (card.startsWith("CAT_")) {
-      const alreadySelected = selectedCatCards.find(c => c.index === idx);
-      let newSelection;
+              if (card.startsWith("CAT_")) {
+                const alreadySelected = selectedCatCards.find(c => c.index === idx);
+                let newSelection;
 
-      if (alreadySelected) {
-        newSelection = selectedCatCards.filter(c => c.index !== idx);
-      } else {
-        newSelection = [...selectedCatCards, { card, index: idx }];
-      }
+                if (alreadySelected) {
+                  newSelection = selectedCatCards.filter(c => c.index !== idx);
+                } else {
+                  newSelection = [...selectedCatCards, { card, index: idx }];
+                }
 
-      setSelectedCatCards(newSelection);
+                setSelectedCatCards(newSelection);
 
       // Check for valid cat combinations including feral cats
       const feralCount = newSelection.filter(c => c.card === "CAT_FERAL").length;
@@ -137,9 +137,9 @@ function Game() {
       
       // Count regular cat types
       const regularCatCounts = regularCats.reduce((acc, cur) => {
-        acc[cur.card] = (acc[cur.card] || 0) + 1;
-        return acc;
-      }, {});
+                  acc[cur.card] = (acc[cur.card] || 0) + 1;
+                  return acc;
+                }, {});
 
       // Check for valid combinations
       let canStealRandom = false;
@@ -174,26 +174,26 @@ function Game() {
       setShowStealButton(canStealRandom);
       setShowDefuseStealButton(canStealDefuse);
 
-      return;
-    }
+                return;
+              }
 
     // Normal card play
-    try {
-      await axios.post(`http://localhost:8082/game/play/${lobbyId}`, null, {
-        params: { playerId, cardType: card },
-      });
-      setHand(prev => prev.filter((_, i) => i !== idx));
-      await refreshGameState();
-    } catch (err) {
-      console.error("Failed to play card", err);
-    }
+              try {
+      await axios.post(`http://localhost:8082/api/game/play/${lobbyId}`, null, {
+                  params: { playerId, cardType: card },
+                });
+                setHand(prev => prev.filter((_, i) => i !== idx));
+                await refreshGameState();
+              } catch (err) {
+                console.error("Failed to play card", err);
+              }
   };
 
   // Game action handlers
   const handleDrawCard = async () => {
     if (playerId !== currentPlayerId) return;
     try {
-      await axios.post(`http://localhost:8082/game/draw/${lobbyId}`, null, {
+      await axios.post(`http://localhost:8082/api/game/draw/${lobbyId}`, null, {
         params: { playerId },
       });
       await refreshGameState();
@@ -203,19 +203,19 @@ function Game() {
   };
 
   const handleSkipTurn = async () => {
-    try {
-      await axios.post(`http://localhost:8082/game/skip/${lobbyId}`);
-      await refreshGameState();
-    } catch (err) {
-      console.error("Failed to skip turn", err);
-    }
+            try {
+      await axios.post(`http://localhost:8082/api/game/skip/${lobbyId}`);
+               await refreshGameState();
+            } catch (err) {
+              console.error("Failed to skip turn", err);
+            }
   };
 
   const handleStealCard = async () => {
     setShowStealButton(false);
     const catCards = selectedCatCards.map(c => c.card);
     try {
-      await axios.post(`http://localhost:8082/game/cat-combo/${lobbyId}`, catCards, {
+      await axios.post(`http://localhost:8082/api/game/cat-combo/${lobbyId}`, catCards, {
         params: { playerId }
       });
 
@@ -233,9 +233,9 @@ function Game() {
   const handleStealDefuse = async () => {
     const catCards = selectedCatCards.map(c => c.card);
     try {
-      await axios.post(`http://localhost:8082/game/cat-combo/${lobbyId}`, catCards, {
-        params: { playerId }
-      });
+      await axios.post(`http://localhost:8082/api/game/cat-combo/${lobbyId}`, catCards, {
+                    params: { playerId }
+                  });
 
       // Remove selected cat cards from hand
       const updatedHand = hand.filter((_, i) =>
@@ -244,56 +244,56 @@ function Game() {
       setHand(updatedHand);
       setSelectedCatCards([]);
       setShowDefuseStealButton(false);
-    } catch (err) {
+                } catch (err) {
       console.error("Failed to send cat combo", err);
     }
   };
 
   // Modal handlers
   const handleFavorSelect = async (pid) => {
-    await axios.post(`http://localhost:8082/game/favor/request/${lobbyId}`, null, {
-      params: { fromPlayerId: playerId, toPlayerId: pid }
-    });
-    setShowFavorSelectModal(false);
+    await axios.post(`http://localhost:8082/api/game/favor/request/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowFavorSelectModal(false);
   };
 
   const handleGiveCard = async (card, idx) => {
-    await axios.post(`http://localhost:8082/game/favor/response/${lobbyId}`, null, {
-      params: {
-        fromPlayerId: playerId,
-        toPlayerId: favorFrom,
-        givenCard: card
-      }
-    });
-    setHand(prev => prev.filter((_, i) => i !== idx));
-    setShowGiveCardModal(false);
+    await axios.post(`http://localhost:8082/api/game/favor/response/${lobbyId}`, null, {
+                      params: {
+                        fromPlayerId: playerId,
+                        toPlayerId: favorFrom,
+                        givenCard: card
+                      }
+                    });
+                    setHand(prev => prev.filter((_, i) => i !== idx));
+                    setShowGiveCardModal(false);
   };
 
   const handleTargetedAttackSelect = async (pid) => {
-    await axios.post(`http://localhost:8082/game/targeted/confirm/${lobbyId}`, null, {
-      params: { fromPlayerId: playerId, toPlayerId: pid }
-    });
-    setShowTargetedAttackModal(false);
+    await axios.post(`http://localhost:8082/api/game/targeted/confirm/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowTargetedAttackModal(false);
   };
 
   const handleCatOpponentSelect = async (pid) => {
-    await axios.post(`http://localhost:8082/game/cat/steal/${lobbyId}`, null, {
-      params: { fromPlayerId: playerId, toPlayerId: pid }
-    });
-    setShowCatOpponentModal(false);
+    await axios.post(`http://localhost:8082/api/game/cat/steal/${lobbyId}`, null, {
+                      params: { fromPlayerId: playerId, toPlayerId: pid }
+                    });
+                    setShowCatOpponentModal(false);
   };
 
   const handleCatIndexSelect = async (index) => {
-    await axios.post(`http://localhost:8082/game/cat/steal/resolve/${lobbyId}`, null, {
-      params: { stealerId: playerId, selectedIndex: index }
-    });
-    setShowCatIndexModal(false);
-    await refreshGameState();
+    await axios.post(`http://localhost:8082/api/game/cat/steal/resolve/${lobbyId}`, null, {
+                    params: { stealerId: playerId, selectedIndex: index }
+                  });
+                  setShowCatIndexModal(false);
+                  await refreshGameState();
   };
 
   const handleAlterConfirm = async () => {
     try {
-      await axios.post(`http://localhost:8082/game/alter/${lobbyId}`, alterCards, {
+      await axios.post(`http://localhost:8082/api/game/alter/${lobbyId}`, alterCards, {
         params: { playerId }
       });
       setShowAlterModal(false);
