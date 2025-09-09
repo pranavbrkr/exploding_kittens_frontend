@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  exploding-kittens-frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - exploding-kittens-network
+    restart: unless-stopped
+
+networks:
+  exploding-kittens-network:
+    driver: bridge
