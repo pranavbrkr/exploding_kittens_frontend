@@ -304,6 +304,11 @@ function Game() {
 
   useEffect(() => {
     refreshGameState();
+    
+    // Add polling as fallback for real-time updates
+    const pollInterval = setInterval(refreshGameState, 2000);
+    
+    return () => clearInterval(pollInterval);
   }, [lobbyId, playerId]);
 
   useEffect(() => {
