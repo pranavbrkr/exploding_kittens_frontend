@@ -28,7 +28,7 @@ function PlayerHand({
         {hand.map((card, idx) => (
           <img
             key={idx}
-            src={`/assets/cards/${card.toLowerCase()}.jpg`}
+            src={`/assets/cards/${card.toLowerCase().replace(/\s+/g, '_')}.jpg`}
             alt={card}
             width={80}
             style={{ 

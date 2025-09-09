@@ -15,7 +15,7 @@ function FutureModal({ show, futureCards, onClose }) {
       {futureCards.map((card, index) => (
         <img
           key={index}
-          src={`/assets/cards/${card.toLowerCase()}.jpg`}
+          src={`/assets/cards/${card.toLowerCase().replace(/\s+/g, '_')}.jpg`}
           alt={card}
           width={200}
           style={{

@@ -26,7 +26,7 @@ function AlterModal({ show, alterCards, onAlterCards, onConfirm, onClose }) {
                 <Draggable draggableId={card + index} index={index} key={card + index}>
                   {(provided, snapshot) => (
                     <img
-                      src={`/assets/cards/${card.toLowerCase()}.jpg`}
+                      src={`/assets/cards/${card.toLowerCase().replace(/\s+/g, '_')}.jpg`}
                       alt={card}
                       width={200}
                       ref={(node) => {
