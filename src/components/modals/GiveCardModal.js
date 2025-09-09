@@ -23,7 +23,7 @@ function GiveCardModal({ show, hand, onSelectCard, onClose }) {
           {hand.map((card, idx) => (
             <img
               key={idx}
-              src={`/assets/cards/${card}.jpg`}
+              src={`/assets/cards/${card.toLowerCase()}.jpg`}
               alt={card}
               width={100}
               onClick={() => onSelectCard(card, idx)}

@@ -1,5 +1,5 @@
-# Multi-stage build for React frontend
-FROM node:18-alpine AS build
+# Use development server (simpler and more reliable)
+FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,26 +7,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies
+RUN npm install
 
 # Copy source code
 COPY . .
 
-# Build the application
-RUN npm run build
+# Verify assets are copied
+RUN ls -la public/assets/cards/
 
-# Production stage with nginx
-FROM nginx:alpine
-
-# Copy built app from build stage
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Expose port 3000 (can be overridden when running container)
+# Expose port 3000
 EXPOSE 3000
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start development server
+CMD ["npm", "start"]

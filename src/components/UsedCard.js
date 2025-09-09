@@ -6,7 +6,7 @@ function UsedCard({ latestUsedCard }) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
       <img
-        src={`/assets/cards/${latestUsedCard}.jpg`}
+        src={`/assets/cards/${latestUsedCard.toLowerCase()}.jpg`}
         alt={latestUsedCard}
         width={100}
         style={{ borderRadius: 12, boxShadow: '0 0 10px rgba(0,0,0,0.3)' }}
