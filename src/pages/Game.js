@@ -202,14 +202,6 @@ function Game() {
     }
   };
 
-  const handleSkipTurn = async () => {
-            try {
-      await axios.post(`http://localhost:8082/api/game/skip/${lobbyId}`);
-               await refreshGameState();
-            } catch (err) {
-              console.error("Failed to skip turn", err);
-            }
-  };
 
   const handleStealCard = async () => {
     setShowStealButton(false);
@@ -408,8 +400,6 @@ function Game() {
 
       {/* Game Controls */}
       <GameControls
-        isCurrentPlayer={isCurrentPlayer}
-        onSkipTurn={handleSkipTurn}
         showStealButton={showStealButton}
         showDefuseStealButton={showDefuseStealButton}
         onStealCard={handleStealCard}

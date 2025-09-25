@@ -1,8 +1,6 @@
 import { Box } from "@mui/material";
 
 function GameControls({ 
-  isCurrentPlayer,
-  onSkipTurn,
   showStealButton,
   showDefuseStealButton,
   onStealCard,
@@ -10,24 +8,6 @@ function GameControls({
 }) {
   return (
     <>
-      {/* Skip Turn Button */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-        <button
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            borderRadius: '8px',
-            border: 'none',
-            backgroundColor: isCurrentPlayer ? '#ff1744' : '#ccc',
-            color: 'white',
-            cursor: isCurrentPlayer ? 'pointer' : 'not-allowed'
-          }}
-          disabled={!isCurrentPlayer}
-          onClick={onSkipTurn}
-        >
-          Skip Turn
-        </button>
-      </Box>
 
       {/* Cat Combo Buttons */}
       {showStealButton && (
