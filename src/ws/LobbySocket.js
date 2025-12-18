@@ -1,10 +1,11 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import apiConfig from "../config/apiConfig";
 
 let stompClient = null;
 
 export const connectToLobbySocket = (lobbyId, onGameStarted) => {
-  const socket = new SockJS("http://localhost:8081/ws/lobby");
+  const socket = new SockJS(apiConfig.lobbyWsUrl.replace('ws://', 'http://').replace('wss://', 'https://'));
   stompClient = new Client({
     webSocketFactory: () => socket,
     onConnect: () => {

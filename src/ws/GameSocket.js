@@ -1,6 +1,7 @@
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import useGameStore from "../store/useGameStore";
+import apiConfig from "../config/apiConfig";
 
 let stompClient = null;
 let onFuturePeek = null;
@@ -18,7 +19,8 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
   onTargetedAttackRequest = targetedAttackCallback;
   onActionNotification = actionNotificationCallback;
 
-  const socket = new SockJS("http://localhost:8082/ws-game");
+  const wsUrl = apiConfig.gameWsUrl.replace('ws://', 'http://').replace('wss://', 'https://');
+  const socket = new SockJS(wsUrl);
   stompClient = new Client({
     webSocketFactory: () => socket,
     onConnect: () => {

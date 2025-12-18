@@ -3,6 +3,7 @@ import { Box, Typography, Button, Paper, TextField } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
 import useGameStore from "../store/useGameStore";
+import apiConfig from "../config/apiConfig";
 
 function WaitingRoom() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ function WaitingRoom() {
 
   const handleCreateLobby = async () => {
     try {
-      const res = await axios.post("http://localhost:8081/api/lobby/create", { playerId });
+      const res = await axios.post(`${apiConfig.lobbyServiceUrl}/api/lobby/create`, { playerId });
       const { lobbyId } = res.data;
       setLobbyId(lobbyId);
       navigate(`/lobby/${lobbyId}`);
@@ -33,7 +34,7 @@ function WaitingRoom() {
   const handleJoinLobby = async () => {
     if (!joinLobbyId.trim()) return;
     try {
-      const res = await axios.post("http://localhost:8081/api/lobby/join", {
+      const res = await axios.post(`${apiConfig.lobbyServiceUrl}/api/lobby/join`, {
         playerId,
         lobbyId: joinLobbyId.trim(),
       });

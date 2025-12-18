@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import useGameStore from "../store/useGameStore";
+import apiConfig from "../config/apiConfig";
 
 function Welcome() {
   const [name, setName] = useState('');
@@ -13,7 +14,7 @@ function Welcome() {
     if (name.trim() === '') return;
 
     try {
-      const res = await axios.post("http://localhost:8080/api/player/register", { name });
+      const res = await axios.post(`${apiConfig.playerServiceUrl}/api/player/register`, { name });
       const player = res.data;
       setPlayer(player.playerId, player.name)
       navigate("/waiting");
