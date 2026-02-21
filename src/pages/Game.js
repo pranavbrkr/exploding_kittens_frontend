@@ -59,6 +59,9 @@ function Game() {
   const [actionNotifications, setActionNotifications] = useState([]);
   const notifiedEliminationsRef = useRef(new Set());
 
+  // WebSocket connection state: fallback polling only when disconnected
+  const [gameSocketConnected, setGameSocketConnected] = useState(false);
+
   // Action notification functions
   const addActionNotification = (message, type = 'info') => {
     const id = Date.now() + Math.random();
@@ -308,8 +311,8 @@ function Game() {
 
   useEffect(() => {
     connectToGameSocket(
-      lobbyId, 
-      setCurrentPlayerId, 
+      lobbyId,
+      setCurrentPlayerId,
       refreshGameState,
       cards => {
         setFutureCards(cards);
@@ -319,19 +322,23 @@ function Game() {
         setAlterCards(cards);
         setShowAlterModal(true);
       },
-      targets => { 
-        setFavorTargets(targets); 
+      targets => {
+        setFavorTargets(targets);
         setShowFavorSelectModal(true);
       },
-      fromId => { 
-        setFavorFrom(fromId); 
-        setShowGiveCardModal(true); 
+      fromId => {
+        setFavorFrom(fromId);
+        setShowGiveCardModal(true);
       },
-      (targets) => { 
-        setTargetedAttackTargets(targets); 
+      (targets) => {
+        setTargetedAttackTargets(targets);
         setShowTargetedAttackModal(true);
       },
-      addActionNotification
+      addActionNotification,
+      {
+        onConnected: () => setGameSocketConnected(true),
+        onDisconnected: () => setGameSocketConnected(false),
+      }
     );
 
     window.onCatOpponentSelect = (targets) => {
@@ -346,6 +353,14 @@ function Game() {
 
     return () => disconnectGameSocket();
   }, [lobbyId]);
+
+  // Fallback: slow poll only when game WebSocket is disconnected (so WS bugs are visible when connected)
+  const FALLBACK_POLL_MS = 5000;
+  useEffect(() => {
+    if (gameSocketConnected) return;
+    const interval = setInterval(refreshGameState, FALLBACK_POLL_MS);
+    return () => clearInterval(interval);
+  }, [lobbyId, gameSocketConnected]);
 
   const latestUsedCard = usedCards[usedCards.length - 1];
   const isCurrentPlayer = playerId === currentPlayerId;

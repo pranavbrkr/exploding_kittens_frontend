@@ -10,7 +10,11 @@ let onFavorRequest = null;
 let onTargetedAttackRequest = null;
 let onActionNotification = null;
 
-export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback, favorTargetCallback, favorRequestCallback, targetedAttackCallback, actionNotificationCallback) => {
+/**
+ * @param {{ onConnected?: () => void, onDisconnected?: () => void }} [connectionOpts] - optional connection state callbacks (pass as last argument)
+ */
+export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, futurePeekCallback, alterFutureCallback, favorTargetCallback, favorRequestCallback, targetedAttackCallback, actionNotificationCallback, connectionOpts = {}) => {
+  const { onConnected, onDisconnected } = connectionOpts;
   onFuturePeek = futurePeekCallback
   onAlterFuture = alterFutureCallback
   onFavorTargetRequest = favorTargetCallback;
@@ -22,6 +26,7 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
   stompClient = new Client({
     webSocketFactory: () => socket,
     onConnect: () => {
+      onConnected?.();
       stompClient.subscribe(`/topic/game/${lobbyId}/turn`, (msg) => {
         onTurnChange(msg.body);
       });
@@ -69,6 +74,9 @@ export const connectToGameSocket = (lobbyId, onTurnChange, onGameStateUpdate, fu
         const actionData = JSON.parse(msg.body);
         if (onActionNotification) onActionNotification(actionData.message, actionData.type);
       });
+    },
+    onDisconnect: () => {
+      onDisconnected?.();
     },
   });
   stompClient.activate();

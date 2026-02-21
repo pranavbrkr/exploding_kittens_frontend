@@ -1,15 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Box, Typography, Paper, Button, Divider } from "@mui/material";
 import axios from "axios";
 import useGameStore from "../store/useGameStore";
 import { useNavigate, useParams } from "react-router-dom";
 import { connectToLobbySocket, disconnectLobbySocket } from "../ws/LobbySocket";
 
+const POLL_WHEN_DISCONNECTED_MS = 2000;
+const POLL_WHEN_CONNECTED_MS = 15000;
+
 function Lobby() {
   const  { lobbyId } = useParams()
   const { playerName, playerId, participants } = useGameStore();
   const setParticipants = useGameStore((state) => state.setParticipants);
   const navigate = useNavigate();
+  const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
     const fetchLobby = async () => {
@@ -23,16 +27,24 @@ function Lobby() {
     };
 
     fetchLobby();
-    const interval = setInterval(fetchLobby, 2000);
+    const intervalMs = socketConnected ? POLL_WHEN_CONNECTED_MS : POLL_WHEN_DISCONNECTED_MS;
+    const interval = setInterval(fetchLobby, intervalMs);
 
     return () => clearInterval(interval);
-  }, [lobbyId]);
+  }, [lobbyId, socketConnected]);
 
   useEffect(() => {
-    connectToLobbySocket(lobbyId, () => {
-      disconnectLobbySocket();
-      navigate(`/game/${lobbyId}`);
-    });
+    connectToLobbySocket(
+      lobbyId,
+      () => {
+        disconnectLobbySocket();
+        navigate(`/game/${lobbyId}`);
+      },
+      {
+        onConnected: () => setSocketConnected(true),
+        onDisconnected: () => setSocketConnected(false),
+      }
+    );
 
     return () => {
       disconnectLobbySocket();
