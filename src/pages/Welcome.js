@@ -35,6 +35,18 @@ function Welcome() {
     }
   };
 
+  const handlePlayAsGuest = async () => {
+    setError("");
+    try {
+      const res = await api.post("/auth/guest");
+      const { token, playerId, name } = res.data;
+      setAuth(token, playerId, name);
+      navigate("/waiting");
+    } catch (err) {
+      setError(err.response?.data?.message || "Could not start as guest");
+    }
+  };
+
   const handleLogin = async () => {
     const e = email.trim();
     const p = password;
@@ -213,6 +225,12 @@ function Welcome() {
             )}
             <Button variant="contained" fullWidth onClick={handleLogin}>
               Continue
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1 }}>
+              or
+            </Typography>
+            <Button variant="outlined" fullWidth onClick={handlePlayAsGuest}>
+              Play as guest
             </Button>
           </>
         )}
