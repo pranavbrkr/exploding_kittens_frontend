@@ -10,7 +10,7 @@ let stompClient = null;
  */
 export const connectToLobbySocket = (lobbyId, onGameStarted, opts = {}) => {
   const { onConnected, onDisconnected } = opts;
-  const socket = new SockJS("http://localhost:8081/ws/lobby");
+  const socket = new SockJS("http://localhost:8080/ws/lobby");
   stompClient = new Client({
     webSocketFactory: () => socket,
     onConnect: () => {

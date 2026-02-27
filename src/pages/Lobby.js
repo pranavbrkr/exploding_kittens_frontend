@@ -18,7 +18,7 @@ function Lobby() {
   useEffect(() => {
     const fetchLobby = async () => {
       try {
-        const res = await axios.get(`http://localhost:8081/api/lobby/${lobbyId}`);
+        const res = await axios.get(`http://localhost:8080/api/lobby/${lobbyId}`);
         const players = res.data.players;
         setParticipants(players);
       } catch (err) {
@@ -53,7 +53,7 @@ function Lobby() {
 
   const handleStartGame = async () => {
     try {
-     await axios.post(`http://localhost:8081/api/lobby/start/${lobbyId}`);
+     await axios.post(`http://localhost:8080/api/lobby/start/${lobbyId}`);
     } catch (err) {
       console.error("Failed to start game", err);
     }

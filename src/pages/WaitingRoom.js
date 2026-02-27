@@ -22,7 +22,7 @@ function WaitingRoom() {
 
   const handleCreateLobby = async () => {
     try {
-      const res = await axios.post("http://localhost:8081/api/lobby/create", { playerId });
+      const res = await axios.post("http://localhost:8080/api/lobby/create", { playerId });
       const { lobbyId } = res.data;
       setLobbyId(lobbyId);
       navigate(`/lobby/${lobbyId}`);
@@ -34,7 +34,7 @@ function WaitingRoom() {
   const handleJoinLobby = async () => {
     if (!joinLobbyId.trim()) return;
     try {
-      const res = await axios.post("http://localhost:8081/api/lobby/join", {
+      const res = await axios.post("http://localhost:8080/api/lobby/join", {
         playerId,
         lobbyId: joinLobbyId.trim(),
       });
