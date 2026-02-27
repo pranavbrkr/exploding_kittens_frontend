@@ -13,6 +13,7 @@ import PlayerHand from "../components/PlayerHand";
 import GameControls from "../components/GameControls";
 import NotificationSystem from "../components/NotificationSystem";
 import GameWinner from "../components/GameWinner";
+import ActionWindow from "../components/ActionWindow";
 
 // Import modal components
 import FutureModal from "../components/modals/FutureModal";
@@ -62,20 +63,11 @@ function Game() {
   // WebSocket connection state: fallback polling only when disconnected
   const [gameSocketConnected, setGameSocketConnected] = useState(false);
 
-  // Action notification functions
+  // Action log: new actions pushed to front, kept for the whole game (display-only list)
   const addActionNotification = (message, type = 'info') => {
     const id = Date.now() + Math.random();
-    setActionNotifications(prev => [...prev, { id, message, type }]);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      removeActionNotification(id);
-    }, 5000);
+    setActionNotifications(prev => [{ id, message, type }, ...prev]);
   };
-
-  const removeActionNotification = (id) => {
-    setActionNotifications(prev => prev.filter(notification => notification.id !== id));
-};
 
   const refreshGameState = async () => {
     try {
@@ -359,61 +351,63 @@ function Game() {
   return (
     <Box sx={{ 
       height: '100vh', 
-      backgroundColor: '#3a3ad6', 
-      p: 4, 
-      position: 'relative',
-      '@keyframes slideInRight': {
-        from: {
-          transform: 'translateX(100%)',
-          opacity: 0
-        },
-        to: {
-          transform: 'translateX(0)',
-          opacity: 1
-        }
-      }
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'row',
+      backgroundColor: '#3a3ad6',
+      overflow: 'hidden'
     }}>
-      {/* Notification System */}
-      <NotificationSystem
-        eliminationNotification={eliminationNotification}
-        actionNotifications={actionNotifications}
-        onDismissElimination={() => setEliminationNotification(null)}
-        onDismissAction={removeActionNotification}
-      />
+      {/* Game area: 80% left */}
+      <Box sx={{
+        width: '80%',
+        height: '100%',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        p: 4,
+        minWidth: 0
+      }}>
+        <NotificationSystem
+          eliminationNotification={eliminationNotification}
+          onDismissElimination={() => setEliminationNotification(null)}
+        />
 
-      {/* Players Row */}
-      <PlayersRow
-        participants={participants}
-        eliminatedPlayers={eliminatedPlayers}
-        currentPlayerId={currentPlayerId}
-        playerId={playerId}
-      />
+        <PlayersRow
+          participants={participants}
+          eliminatedPlayers={eliminatedPlayers}
+          currentPlayerId={currentPlayerId}
+          playerId={playerId}
+        />
 
-      {/* Used Card */}
-      <UsedCard latestUsedCard={latestUsedCard} />
+        {/* Center area: used card + hand; deck in top-right of this area */}
+        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
+          <Box sx={{ position: 'absolute', top: 32, right: 32 }}>
+            <Deck
+              onDrawCard={handleDrawCard}
+              canDraw={isCurrentPlayer}
+            />
+          </Box>
+          <UsedCard latestUsedCard={latestUsedCard} />
+          <PlayerHand
+            hand={hand}
+            selectedCatCards={selectedCatCards}
+            onCardClick={handleCardClick}
+            isCurrentPlayer={currentPlayerId}
+            playerId={playerId}
+          />
+          <GameControls
+            showStealButton={showStealButton}
+            showDefuseStealButton={showDefuseStealButton}
+            onStealCard={handleStealCard}
+            onStealDefuse={handleStealDefuse}
+          />
+        </Box>
+      </Box>
 
-      {/* Deck */}
-      <Deck
-        onDrawCard={handleDrawCard}
-        canDraw={isCurrentPlayer}
-      />
-
-      {/* Player Hand */}
-      <PlayerHand
-        hand={hand}
-        selectedCatCards={selectedCatCards}
-        onCardClick={handleCardClick}
-        isCurrentPlayer={currentPlayerId}
-        playerId={playerId}
-      />
-
-      {/* Game Controls */}
-      <GameControls
-        showStealButton={showStealButton}
-        showDefuseStealButton={showDefuseStealButton}
-        onStealCard={handleStealCard}
-        onStealDefuse={handleStealDefuse}
-      />
+      {/* Game actions: 20% right, full height */}
+      <Box sx={{ width: '20%', height: '100%', minWidth: 0 }}>
+        <ActionWindow actions={actionNotifications} />
+      </Box>
 
       {/* Modals */}
       <FutureModal

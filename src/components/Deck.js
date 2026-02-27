@@ -2,7 +2,7 @@ import { Box } from "@mui/material";
 
 function Deck({ onDrawCard, canDraw }) {
   return (
-    <Box sx={{ position: 'absolute', top: 32, right: 32 }}>
+    <Box>
       <img
         src="/assets/cards/BACK.png"
         alt="deck"
