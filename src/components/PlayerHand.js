@@ -8,12 +8,12 @@ function PlayerHand({
   playerId 
 }) {
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6, flexWrap: 'wrap' }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb: 2, flexWrap: 'wrap' }}>
       <Box
         sx={{
           display: 'flex',
           justifyContent: 'center',
-          mt: 6,
+          mt: 2,
           flexWrap: 'wrap',
           p: 2,
           borderRadius: 4,

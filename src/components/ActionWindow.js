@@ -1,21 +1,15 @@
 import { Box, Typography } from "@mui/material";
 
-function ActionWindow({ actions }) {
-  const getBgColor = (type) => {
-    switch (type) {
-      case 'success': return '#2e7d32';
-      case 'warning': return '#ed6c02';
-      case 'error': return '#c62828';
-      default: return '#1565c0';
-    }
-  };
+// Same purple as Welcome/login screen gradient (#780178)
+const MOVE_ITEM_PURPLE = '#780178';
 
+function ActionWindow({ actions }) {
   return (
     <Box sx={{
       width: '100%',
       height: '100%',
-      backgroundColor: 'rgba(0,0,0,0.3)',
-      borderLeft: '1px solid rgba(255,255,255,0.2)',
+      backgroundColor: '#d0d0d0',
+      borderLeft: '1px solid #bdbdbd',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -23,11 +17,11 @@ function ActionWindow({ actions }) {
       <Box sx={{
         px: 2,
         py: 1.5,
-        borderBottom: '1px solid rgba(255,255,255,0.2)',
-        backgroundColor: 'rgba(0,0,0,0.2)'
+        borderBottom: '1px solid #424242',
+        backgroundColor: '#424242'
       }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'white' }}>
-          Game actions
+          Moves history
         </Typography>
       </Box>
       <Box sx={{
@@ -37,22 +31,23 @@ function ActionWindow({ actions }) {
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        p: 1.5
+        p: 1.5,
+        backgroundColor: '#9e9e9e'
       }}>
         {actions.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
-            No actions yet
+          <Typography variant="body2" sx={{ color: '#757575', fontStyle: 'italic' }}>
+            No moves yet
           </Typography>
         ) : (
           actions.map((item) => (
             <Box
               key={item.id}
               sx={{
-                backgroundColor: getBgColor(item.type),
+                backgroundColor: MOVE_ITEM_PURPLE,
                 color: 'white',
                 padding: 1.25,
                 borderRadius: 1.5,
-                border: '1px solid rgba(255,255,255,0.15)'
+                border: '1px solid rgba(255,255,255,0.2)'
               }}
             >
               <Typography variant="body2" sx={{ fontWeight: 500 }}>

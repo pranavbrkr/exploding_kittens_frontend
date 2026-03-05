@@ -4,7 +4,7 @@ function UsedCard({ latestUsedCard }) {
   if (!latestUsedCard) return null;
 
   return (
-    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4, mt: -6 }}>
       <img
         src={`/assets/cards/${latestUsedCard}.jpg`}
         alt={latestUsedCard}

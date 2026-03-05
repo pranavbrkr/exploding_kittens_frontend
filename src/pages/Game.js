@@ -372,6 +372,14 @@ function Game() {
           onDismissElimination={() => setEliminationNotification(null)}
         />
 
+        {/* Game deck: top-right corner of game area */}
+        <Box sx={{ position: 'absolute', top: 28, right: 32, zIndex: 10 }}>
+          <Deck
+            onDrawCard={handleDrawCard}
+            canDraw={isCurrentPlayer}
+          />
+        </Box>
+
         <PlayersRow
           participants={participants}
           eliminatedPlayers={eliminatedPlayers}
@@ -379,14 +387,8 @@ function Game() {
           playerId={playerId}
         />
 
-        {/* Center area: used card + hand; deck in top-right of this area */}
-        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0 }}>
-          <Box sx={{ position: 'absolute', top: 32, right: 32 }}>
-            <Deck
-              onDrawCard={handleDrawCard}
-              canDraw={isCurrentPlayer}
-            />
-          </Box>
+        {/* Center area: used card + hand (deck is in top-right of game area) */}
+        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0, pb: 20 }}>
           <UsedCard latestUsedCard={latestUsedCard} />
           <PlayerHand
             hand={hand}

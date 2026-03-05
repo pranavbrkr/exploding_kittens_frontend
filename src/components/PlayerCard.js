@@ -2,13 +2,13 @@ import { Box, Typography, Avatar } from "@mui/material";
 
 function PlayerCard({ player, isEliminated, isCurrentPlayer, isYourTurn }) {
   return (
-    <Box key={player.playerId} sx={{ textAlign: 'center' }}>
+    <Box key={player.playerId} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 44 }}>
       <Avatar 
         sx={{ 
-          width: 60, 
-          height: 60, 
+          width: 44, 
+          height: 44, 
           bgcolor: isEliminated ? 'red' : isCurrentPlayer ? 'yellow' : 'transparent', 
-          border: '5px solid black',
+          border: '3px solid black',
           opacity: isEliminated ? 0.6 : 1,
           position: 'relative'
         }}
@@ -32,11 +32,18 @@ function PlayerCard({ player, isEliminated, isCurrentPlayer, isYourTurn }) {
         </Typography>
       )}
       <Typography 
+        variant="body2"
         color="white" 
-        align="center"
         sx={{ 
+          mt: 0.5,
+          fontSize: '0.75rem',
+          textAlign: 'center',
           textDecoration: isEliminated ? 'line-through' : 'none',
-          opacity: isEliminated ? 0.6 : 1
+          opacity: isEliminated ? 0.6 : 1,
+          width: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
         }}
       >
         {player.name}
