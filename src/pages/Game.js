@@ -172,6 +172,9 @@ function Game() {
                 return;
               }
 
+    // DEFUSE and EXPLODING_KITTEN are only used by the system (draw/steal), not playable by click
+    if (card === 'DEFUSE' || card === 'EXPLODING_KITTEN') return;
+
     // Normal card play
               try {
       await axios.post(`http://localhost:8082/api/game/play/${lobbyId}`, null, {
