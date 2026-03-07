@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import useGameStore from "../store/useGameStore";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { connectToGameSocket, disconnectGameSocket } from "../ws/GameSocket";
@@ -30,6 +30,7 @@ function Game() {
   // Game state
   const [hand, setHand] = useState([]);
   const [currentPlayerId, setCurrentPlayerId] = useState(null);
+  const [cardsToDraw, setCardsToDraw] = useState(1);
   const [usedCards, setUsedCards] = useState([]);
   const [eliminatedPlayers, setEliminatedPlayers] = useState([]);
   const [gameWinner, setGameWinner] = useState(null);
@@ -95,6 +96,7 @@ function Game() {
       
       setEliminatedPlayers(newEliminatedPlayers);
       setUsedCards(gameState.usedCards || []);
+      setCardsToDraw(typeof gameState.cardsToDraw === 'number' ? gameState.cardsToDraw : 1);
 
       const player = gameState.players.find(p => p.playerId === playerId);
       if (player) setHand(player.hand);
@@ -375,24 +377,32 @@ function Game() {
           onDismissElimination={() => setEliminationNotification(null)}
         />
 
-        {/* Game deck: top-right corner of game area */}
-        <Box sx={{ position: 'absolute', top: 28, right: 32, zIndex: 10 }}>
-          <Deck
-            onDrawCard={handleDrawCard}
-            canDraw={isCurrentPlayer}
+        {/* Zone 1 (top): player circles + game deck — content cannot leave this zone */}
+        <Box sx={{ flex: '0 0 auto', minHeight: 140, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <PlayersRow
+            participants={participants}
+            eliminatedPlayers={eliminatedPlayers}
+            currentPlayerId={currentPlayerId}
+            playerId={playerId}
           />
+          <Box sx={{ position: 'absolute', top: 8, right: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+            <Deck
+              onDrawCard={handleDrawCard}
+              canDraw={isCurrentPlayer}
+            />
+            <Typography variant="body2" sx={{ color: 'white', fontWeight: 'bold', textShadow: '0 1px 2px rgba(0,0,0,0.5)', opacity: isCurrentPlayer ? 1 : 0.85 }}>
+              Cards to be drawn: {cardsToDraw}
+            </Typography>
+          </Box>
         </Box>
 
-        <PlayersRow
-          participants={participants}
-          eliminatedPlayers={eliminatedPlayers}
-          currentPlayerId={currentPlayerId}
-          playerId={playerId}
-        />
-
-        {/* Center area: used card + hand (deck is in top-right of game area) */}
-        <Box sx={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 0, pb: 20 }}>
+        {/* Zone 2 (middle): used deck only — content cannot leave this zone */}
+        <Box sx={{ flex: '0 0 auto', minHeight: 140, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <UsedCard latestUsedCard={latestUsedCard} />
+        </Box>
+
+        {/* Zone 3 (bottom): hand + controls — expands downward only, never into middle zone */}
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', pb: 4 }}>
           <PlayerHand
             hand={hand}
             selectedCatCards={selectedCatCards}
