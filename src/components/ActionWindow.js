@@ -1,15 +1,12 @@
 import { Box, Typography } from "@mui/material";
 
-// Same purple as Welcome/login screen gradient (#780178)
-const MOVE_ITEM_PURPLE = '#780178';
-
 function ActionWindow({ actions }) {
   return (
     <Box sx={{
       width: '100%',
       height: '100%',
-      backgroundColor: '#d0d0d0',
-      borderLeft: '1px solid #bdbdbd',
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderLeft: '1px solid rgba(255,255,255,0.15)',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column'
@@ -17,8 +14,8 @@ function ActionWindow({ actions }) {
       <Box sx={{
         px: 2,
         py: 1.5,
-        borderBottom: '1px solid #424242',
-        backgroundColor: '#424242'
+        borderBottom: '1px solid rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(0,0,0,0.25)'
       }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'white' }}>
           Moves history
@@ -32,10 +29,10 @@ function ActionWindow({ actions }) {
         flexDirection: 'column',
         gap: 1,
         p: 1.5,
-        backgroundColor: '#9e9e9e'
+        backgroundColor: 'transparent'
       }}>
         {actions.length === 0 ? (
-          <Typography variant="body2" sx={{ color: '#757575', fontStyle: 'italic' }}>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
             No moves yet
           </Typography>
         ) : (
@@ -43,7 +40,7 @@ function ActionWindow({ actions }) {
             <Box
               key={item.id}
               sx={{
-                backgroundColor: MOVE_ITEM_PURPLE,
+                backgroundColor: 'rgba(120,1,120,0.6)',
                 color: 'white',
                 padding: 1.25,
                 borderRadius: 1.5,

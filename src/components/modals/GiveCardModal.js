@@ -3,21 +3,7 @@ import BaseModal from "./BaseModal";
 
 function GiveCardModal({ show, hand, onSelectCard, onClose }) {
   return (
-    <>
-      {show && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 999,
-          }}
-        />
-      )}
-      <BaseModal show={show} onClose={onClose} style={{ zIndex: 1000 }}>
+    <BaseModal show={show} onClose={onClose}>
         <Typography>Select a card to give to the favor requester:</Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           {hand.map((card, idx) => (
@@ -31,8 +17,7 @@ function GiveCardModal({ show, hand, onSelectCard, onClose }) {
             />
           ))}
         </Box>
-      </BaseModal>
-    </>
+    </BaseModal>
   );
 }
 
